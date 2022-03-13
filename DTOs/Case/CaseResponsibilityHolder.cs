@@ -1,24 +1,23 @@
-﻿using System.ComponentModel.DataAnnotations;
-using GraduationProjectAPI.Utilities.CustomValidationAttributes;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Http;
 
-namespace GraduationProjectAPI.DTOs.Mediator
+namespace GraduationProjectAPI.DTOs.Case
 {
-	public class MediatorRegister
+	public class CaseResponsibilityHolder
 	{
-		[Required, MaxLength(250), MinLength(2)]
+		[Required]
 		public string Name { get; set; }
 
 		[Required, MaxLength(11), MinLength(11), RegularExpression("^[0-9]+$", ErrorMessage = "Phone number must be only numbers")]
 		public string PhoneNumber { get; set; }
 
-		[Required]
-		public GeoLocationDto GeoLocation { get; set; }
+		public DateTime BirthDate { get; set; }
 
 		[Required, MaxLength(14), MinLength(14), RegularExpression("^[0-9]+$", ErrorMessage = "National id must be only numbers")]
 		public string NationalId { get; set; }
 
-		[RequiredFile]
+		[Required]
 		public IFormFile NatoinalIdImage { get; set; }
 
 		[Range(1, 2)]

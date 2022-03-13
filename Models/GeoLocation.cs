@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace GraduationProjectAPI.Models
 {
@@ -11,5 +12,8 @@ namespace GraduationProjectAPI.Models
 
 		[Column(TypeName = "decimal(8,6)")]
 		public decimal Latitude { get; set; }
+
+		[Required, MaxLength(4000)]
+		public string Details { get; set; }
 	}
 }

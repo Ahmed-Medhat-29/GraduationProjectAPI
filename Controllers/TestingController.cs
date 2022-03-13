@@ -1,7 +1,7 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
 using GraduationProjectAPI.Data;
-using GraduationProjectAPI.Utilities.Customs.ApiResponses;
+using GraduationProjectAPI.Utilities.CustomApiResponses;
 using GraduationProjectAPI.Utilities.StaticStrings;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;

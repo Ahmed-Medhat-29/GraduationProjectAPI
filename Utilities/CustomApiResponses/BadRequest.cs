@@ -5,16 +5,22 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 
-namespace GraduationProjectAPI.Utilities.Customs.ApiResponses
+namespace GraduationProjectAPI.Utilities.CustomApiResponses
 {
-	public class BadRequest : IActionResult
+	public class BadRequest : IActionResult, IApiResponse
 	{
 		public byte Status { get; } = 0;
 		public string Message { get; } = "Error";
-		public IDictionary<string, IEnumerable<string>> Errors { get; private set; } = new Dictionary<string, IEnumerable<string>>();
+		public IDictionary<string, IEnumerable<string>> Errors { get; private set; }
+
+		public BadRequest(string errorMessage)
+		{
+			Message = errorMessage;
+		}
 
 		public BadRequest(ModelStateDictionary modelState)
 		{
+			Errors = new Dictionary<string, IEnumerable<string>>();
 			foreach (var model in modelState.Where(m => m.Value.Errors.Count > 0))
 				Errors.Add(model.Key, model.Value.Errors.Select(e => e.ErrorMessage));
 		}
@@ -26,11 +32,13 @@ namespace GraduationProjectAPI.Utilities.Customs.ApiResponses
 
 		public BadRequest(KeyValuePair<string, IEnumerable<string>> error)
 		{
+			Errors = new Dictionary<string, IEnumerable<string>>();
 			Errors.Add(error);
 		}
 
 		public BadRequest(string propertyName, string errorMessage)
 		{
+			Errors = new Dictionary<string, IEnumerable<string>>();
 			Errors.Add(new KeyValuePair<string, IEnumerable<string>>(propertyName, new[] { errorMessage }));
 		}
 

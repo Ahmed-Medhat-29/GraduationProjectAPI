@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.IO;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
@@ -32,17 +33,16 @@ namespace GraduationProjectAPI.Models
 		[MaxLength(4000)]
 		public string Bio { get; set; }
 
-		[MaxLength(4000)]
-		public string NationalIdImageName { get; set; }
+		//[Required]
+		public byte[] NationalIdImage { get; set; }
 
-		[MaxLength(4000)]
-		public string ProfileImageName { get; set; }
-
-		public Region Region { get; set; }
-		public int? RegionId { get; set; }
+		public byte[] ProfileImage { get; set; }
 
 		public GeoLocation GeoLocation { get; set; }
 		public int GeoLocationId { get; set; }
+
+		public Region Region { get; set; }
+		public int? RegionId { get; set; }
 
 		public Gender Gender { get; set; }
 		public byte GenderId { get; set; }
@@ -53,14 +53,22 @@ namespace GraduationProjectAPI.Models
 		public Status Status { get; set; }
 		public byte StatusId { get; set; }
 
-		public async Task SetNationalIdImageNameAsync(IFormFile nationalIdImage)
+		public async Task SetNationalIdImageAsync(IFormFile nationalIdImage)
 		{
-			await new MediatorImagesHandler(this).SetMediatorNationalIdImageAsync(nationalIdImage);
+			using (var stream = new MemoryStream())
+			{
+				await nationalIdImage.CopyToAsync(stream);
+				NationalIdImage = stream.ToArray();
+			}
 		}
 
 		public async Task SetProfileImageAsync(IFormFile profileImage)
 		{
-			await new MediatorImagesHandler(this).SetMediatorProfileImageAsync(profileImage);
+			using (var stream = new MemoryStream())
+			{
+				await profileImage.CopyToAsync(stream);
+				ProfileImage = stream.ToArray();
+			}
 		}
 	}
 }

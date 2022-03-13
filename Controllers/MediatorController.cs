@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using AutoMapper;
@@ -6,8 +7,7 @@ using GraduationProjectAPI.Data;
 using GraduationProjectAPI.DTOs.Mediator;
 using GraduationProjectAPI.Models;
 using GraduationProjectAPI.Utilities.AuthenticationConfigurations;
-using GraduationProjectAPI.Utilities.Customs.ApiResponses;
-using GraduationProjectAPI.Utilities.StaticStrings;
+using GraduationProjectAPI.Utilities.CustomApiResponses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -29,17 +29,14 @@ namespace GraduationProjectAPI.Controllers
 		}
 
 		[HttpPost("[action]")]
-		[ProducesResponseType(typeof(int), StatusCodes.Status200OK)]
+		[RequestFormLimits(MultipartBodyLengthLimit = 1024 * 1024)]
+		[ProducesResponseType(typeof(Success), StatusCodes.Status200OK)]
 		[ProducesResponseType(typeof(BadRequest), StatusCodes.Status400BadRequest)]
-		public async Task<IActionResult> Register([FromForm] MediatorRegister model)
+		public async Task<IActionResult> Register([FromForm] MediatorRegister model, string firebaseToken)
 		{
-			var nationalIdImage = model.NatoinalIdImage;
-			if (nationalIdImage == null || nationalIdImage.Length <= 0)
-				return new BadRequest(nameof(model.NatoinalIdImage), "Please provide an image of your national ID");
-
-			var badRequest = await IsMediatorRegisteredAsync(model);
-			if (badRequest != null)
-				return badRequest;
+			var result = await IsMediatorRegisteredAsync(model);
+			if (result != null)
+				return result;
 
 			var pendingStatusId = _context.Status
 				.Where(s => s.Name == nameof(Utilities.StaticStrings.Status.Pending))
@@ -47,18 +44,17 @@ namespace GraduationProjectAPI.Controllers
 				.FirstAsync();
 
 			var mediator = _mapper.Map<Mediator>(model);
+			await mediator.SetNationalIdImageAsync(model.NatoinalIdImage);
 			mediator.StatusId = await pendingStatusId;
 			await _context.Mediators.AddAsync(mediator);
-			await _context.SaveChangesAsync();
-
-			await mediator.SetNationalIdImageNameAsync(nationalIdImage);
 			await _context.SaveChangesAsync();
 			return new Success();
 		}
 
 		[Authorize]
 		[HttpPatch("[action]")]
-		[ProducesResponseType(typeof(int), StatusCodes.Status200OK)]
+		[RequestFormLimits(MultipartBodyLengthLimit = 1024 * 1024)]
+		[ProducesResponseType(typeof(Success), StatusCodes.Status200OK)]
 		public async Task<IActionResult> CompleteProfile([FromForm] MediatorRegisterCompletion model)
 		{
 			var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
@@ -69,6 +65,8 @@ namespace GraduationProjectAPI.Controllers
 		}
 
 		[HttpPost("[action]")]
+		[ProducesResponseType(typeof(Success), StatusCodes.Status200OK)]
+		[ProducesResponseType(typeof(BadRequest), StatusCodes.Status400BadRequest)]
 		public async Task<IActionResult> SignIn([FromForm] MediatorSignIn model, [FromServices] IAuthenticationTokenGenerator tokenGenerator)
 		{
 			var mediator = await _context.Mediators
@@ -77,14 +75,18 @@ namespace GraduationProjectAPI.Controllers
 				{
 					Id = m.Id,
 					Name = m.Name,
-					Status = new Models.Status { Name = m.Status.Name }
+					Status = new Status { Name = m.Status.Name }
 				}).FirstOrDefaultAsync();
 
-			var error = CheckStatusValidation(mediator);
-			if (error != null)
-				return error;
+			var result = CheckStatusValidation(mediator);
+			if (result != null)
+				return result;
 
-			var token = tokenGenerator.Generate(mediator.Id.ToString(), model.IMEI, model.FirebaseToken);
+			var list = new List<KeyValuePair<string, string>>();
+			list.Add(new KeyValuePair<string, string>("PhoneNumber", model.PhoneNumber));
+			list.Add(new KeyValuePair<string, string>("IMEI", model.IMEI));
+			list.Add(new KeyValuePair<string, string>("FirebaseToken", model.FirebaseToken));
+			var token = tokenGenerator.Generate(mediator.Id.ToString(), list);
 			return new Success(token);
 		}
 
@@ -100,34 +102,55 @@ namespace GraduationProjectAPI.Controllers
 				{
 					Name = m.Name,
 					Bio = m.Bio,
-					ProfileImageName = m.ProfileImageName,
 					SocialStatusId = m.SocialStatusId
 				}).FirstAsync();
 
 			var mediatorProfile = _mapper.Map<MediatorProfile>(mediator);
-			if (!string.IsNullOrWhiteSpace(mediator.ProfileImageName))
-				mediatorProfile.ImageUrl = string.Concat(Request.Scheme, "://", Request.Host, Request.PathBase, "/", ImagePath.Profile.Replace('\\', '/'), mediator.ProfileImageName);
-
+			mediatorProfile.ImageUrl = string.Concat(Request.Scheme, "://", Request.Host, Request.PathBase, "/api/Mediator/ProfileImage");
 			return new Success(mediatorProfile);
+		}
+
+		[Authorize]
+		[HttpGet("[action]")]
+		public async Task<IActionResult> ProfileImage()
+		{
+			var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+			var image = await _context.Mediators
+				.Where(m => m.Id == userId)
+				.Select(m => m.ProfileImage)
+				.FirstOrDefaultAsync();
+
+			if (image == null)
+				return NotFound(null);
+
+			return File(image, "image/jpeg");
+		}
+
+		[HttpPost("[action]")]
+		[ProducesResponseType(typeof(Success), StatusCodes.Status200OK)]
+		[ProducesResponseType(typeof(BadRequest), StatusCodes.Status400BadRequest)]
+		public async Task<IActionResult> ValidateNumber([FromForm] MediatorPhoneNumber numberDTO)
+		{
+			var isNumberRegistered = await _context.Mediators.AsNoTracking().AnyAsync(m => m.PhoneNumber == numberDTO.PhoneNumber);
+			return isNumberRegistered ? new BadRequest("Number is registered already") : new Success();
 		}
 
 		private async Task<BadRequest> IsMediatorRegisteredAsync(MediatorRegister model)
 		{
 			var mediator = await _context.Mediators.AsNoTracking()
-				.Where(m => m.NationalId == model.NationalId || m.PhoneNumber == model.PhoneNumber)
 				.Select(m => new Mediator
 				{
 					NationalId = m.NationalId,
 					PhoneNumber = m.PhoneNumber
-				}).FirstOrDefaultAsync();
+				}).FirstOrDefaultAsync(m => m.PhoneNumber == model.PhoneNumber || m.NationalId == model.NationalId);
 
 			if (mediator == null)
 				return null;
 
-			if (mediator.NationalId == model.NationalId)
-				return new BadRequest(nameof(model.NationalId), "National id already exists");
-			else
+			if (mediator.PhoneNumber == model.PhoneNumber)
 				return new BadRequest(nameof(model.PhoneNumber), "Phone number already exists");
+			else
+				return new BadRequest(nameof(model.NationalId), "National id already exists");
 		}
 
 		private BadRequest CheckStatusValidation(Mediator mediator)

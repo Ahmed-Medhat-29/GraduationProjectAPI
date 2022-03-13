@@ -2,9 +2,9 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-namespace GraduationProjectAPI.Utilities.Customs.ApiResponses
+namespace GraduationProjectAPI.Utilities.CustomApiResponses
 {
-	public class Success : IActionResult
+	public class Success : IActionResult, IApiResponse
 	{
 		public byte Status { get; } = 1;
 		public string Message { get; } = "Success";

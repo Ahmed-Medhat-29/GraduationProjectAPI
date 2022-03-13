@@ -1,0 +1,9 @@
+ContentType multipart/form-data; boundary=--------------------------595040814882211783905223
+Key: Name | Value: Ahmed Medhat
+Key: NationalId | Value: 12345678901235
+Key: PhoneNumber | Value: 01068218988
+Key: GeoLocation[Longitude] | Value: -123.123456
+Key: GeoLocation[Latitude] | Value: -12.123456
+Key: GeoLocation[Details] | Value: El Mahalla El Kubra, Mahmoud st
+Key: GenderId | Value: 1
+Key: SocialStatusId | Value: 1

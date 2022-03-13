@@ -11,10 +11,10 @@ namespace GraduationProjectAPI.Utilities
 		{
 			CreateMap<MediatorRegister, Mediator>().ReverseMap();
 			CreateMap<Mediator, MediatorProfile>();
-			CreateMap<GeoLocationDTO, GeoLocation>().ReverseMap();
-			CreateMap<Governorate, GovernorateDTO>();
-			CreateMap<City, CityDTO>();
-			CreateMap<Region, RegionDTO>();
+			CreateMap<GeoLocationDto, GeoLocation>().ReverseMap();
+			CreateMap<Governorate, GovernorateDto>();
+			CreateMap<City, CityDto>();
+			CreateMap<Region, RegionDto>();
 		}
 	}
 }

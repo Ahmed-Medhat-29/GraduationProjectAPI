@@ -1,8 +1,9 @@
 using System.Text;
+using System.Text.Json;
 using GraduationProjectAPI.Data;
 using GraduationProjectAPI.Utilities;
 using GraduationProjectAPI.Utilities.AuthenticationConfigurations;
-using GraduationProjectAPI.Utilities.Customs.ApiResponses;
+using GraduationProjectAPI.Utilities.CustomApiResponses;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
@@ -32,7 +33,7 @@ namespace GraduationProjectAPI
 				.AddJwtBearer(options =>
 				{
 					options.SaveToken = false;
-					options.RequireHttpsMetadata = true;
+					options.RequireHttpsMetadata = false;
 					options.TokenValidationParameters = new TokenValidationParameters()
 					{
 						ValidateLifetime = true,
@@ -45,12 +46,14 @@ namespace GraduationProjectAPI
 					};
 				});
 
-			services.AddControllers().ConfigureApiBehaviorOptions(options =>
-				options.InvalidModelStateResponseFactory = actionContext =>
-						new BadRequest(actionContext.ModelState));
+			services.AddControllers()
+				.ConfigureApiBehaviorOptions(options =>
+					options.InvalidModelStateResponseFactory = actionContext => new BadRequest(actionContext.ModelState))
+				.AddJsonOptions(options =>
+					options.JsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase);
 
-			services.AddAutoMapper(config => config.AddProfile<MapperProfile>());
-			services.AddScoped<IAuthenticationTokenGenerator, AuthenticatonTokenGenerator>();
+			services.AddAutoMapper(options => options.AddProfile<MapperProfile>());
+			services.AddScoped<IAuthenticationTokenGenerator, JwtGenerator>();
 
 			services.AddTransient<IConfigureOptions<SwaggerGenOptions>, SwaggerOptions>();
 			services.AddSwaggerGen();
@@ -66,6 +69,14 @@ namespace GraduationProjectAPI
 				c.RoutePrefix = string.Empty;
 			});
 
+			app.Use(async (context, next) =>
+			{
+				// Do loging
+				HttpRequestLogger.Log(context.Request);
+				// Do work that doesn't write to the Response.
+				await next.Invoke();
+				// Do logging or other work that doesn't write to the Response.
+			});
 			app.UseRouting();
 			app.UseAuthentication();
 			app.UseAuthorization();

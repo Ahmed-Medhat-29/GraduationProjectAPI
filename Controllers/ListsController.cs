@@ -5,7 +5,7 @@ using AutoMapper;
 using GraduationProjectAPI.Data;
 using GraduationProjectAPI.DTOs;
 using GraduationProjectAPI.Models;
-using GraduationProjectAPI.Utilities.Customs.ApiResponses;
+using GraduationProjectAPI.Utilities.CustomApiResponses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -32,7 +32,7 @@ namespace GraduationProjectAPI.Controllers
 		public async Task<IActionResult> Governorates()
 		{
 			var governorates = await _context.Governorates.AsNoTracking().ToArrayAsync();
-			return new Success(_mapper.Map<IEnumerable<GovernorateDTO>>(governorates));
+			return new Success(_mapper.Map<IEnumerable<GovernorateDto>>(governorates));
 		}
 
 		[HttpGet("[action]/{id}")]
@@ -40,7 +40,7 @@ namespace GraduationProjectAPI.Controllers
 		public async Task<IActionResult> Cities(uint id)
 		{
 			var cities = await _context.Cities.AsNoTracking().Where(c => c.GovernorateId == id).ToArrayAsync();
-			return new Success(_mapper.Map<IEnumerable<CityDTO>>(cities));
+			return new Success(_mapper.Map<IEnumerable<CityDto>>(cities));
 		}
 
 		[HttpGet("[action]/{id}")]
@@ -48,7 +48,7 @@ namespace GraduationProjectAPI.Controllers
 		public async Task<IActionResult> Regions(uint id)
 		{
 			var regions = await _context.Regions.AsNoTracking().Where(r => r.CityId == id).ToArrayAsync();
-			return new Success(_mapper.Map<IEnumerable<RegionDTO>>(regions));
+			return new Success(_mapper.Map<IEnumerable<RegionDto>>(regions));
 		}
 
 		[HttpGet("[action]")]
