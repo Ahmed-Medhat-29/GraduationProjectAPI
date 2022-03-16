@@ -69,14 +69,11 @@ namespace GraduationProjectAPI
 				c.RoutePrefix = string.Empty;
 			});
 
-			app.Use(async (context, next) =>
-			{
-				// Do loging
-				HttpRequestLogger.Log(context.Request);
-				// Do work that doesn't write to the Response.
-				await next.Invoke();
-				// Do logging or other work that doesn't write to the Response.
-			});
+			//app.Use(async (context, next) =>
+			//{
+			//	HttpRequestLogger.Log(context.Request);
+			//	await next.Invoke();
+			//});
 			app.UseRouting();
 			app.UseAuthentication();
 			app.UseAuthorization();
