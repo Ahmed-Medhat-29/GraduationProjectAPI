@@ -8,6 +8,9 @@ namespace GraduationProjectAPI.Data.EntitiesConfigurations
 	{
 		public void Configure(EntityTypeBuilder<Case> builder)
 		{
+			builder.HasIndex(m => m.NationalId).IsUnique();
+			builder.HasIndex(m => m.PhoneNumber).IsUnique();
+
 			builder.HasOne(c => c.GeoLocation)
 				.WithOne()
 				.OnDelete(DeleteBehavior.Restrict);
@@ -38,6 +41,10 @@ namespace GraduationProjectAPI.Data.EntitiesConfigurations
 
 			builder.HasOne(c => c.Relationship)
 				.WithMany()
+				.OnDelete(DeleteBehavior.Restrict);
+
+			builder.HasOne(c => c.Mediator)
+				.WithMany(m => m.CasesAdded)
 				.OnDelete(DeleteBehavior.Restrict);
 		}
 	}

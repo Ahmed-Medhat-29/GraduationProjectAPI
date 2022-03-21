@@ -1,7 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
-using GraduationProjectAPI.Utilities.CustomValidationAttributes;
 using Microsoft.AspNetCore.Http;
 
 namespace GraduationProjectAPI.DTOs.Mediator
@@ -19,7 +18,7 @@ namespace GraduationProjectAPI.DTOs.Mediator
 		[MaxLength(4000), MinLength(3)]
 		public string Bio { get; set; }
 
-		[RequiredFile]
+		[Required]
 		public IFormFile ProfileImage { get; set; }
 
 		[Range(1, int.MaxValue)]

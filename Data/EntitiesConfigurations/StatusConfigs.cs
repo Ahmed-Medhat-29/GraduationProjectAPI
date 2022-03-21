@@ -1,6 +1,7 @@
 ﻿using GraduationProjectAPI.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using StaticStrings = GraduationProjectAPI.Utilities.StaticStrings;
 
 namespace GraduationProjectAPI.Data.EntitiesConfigurations
 {
@@ -10,10 +11,10 @@ namespace GraduationProjectAPI.Data.EntitiesConfigurations
 		{
 			var data = new[]
 			{
-				new Status { Id = 1, Name = "Pending"},
-				new Status { Id = 2, Name = "Accepted"},
-				new Status { Id = 3, Name = "Rejected"},
-				new Status { Id = 4, Name = "Submitted"}
+				new Status { Id = 1, Name = StaticStrings.Status.Pending},
+				new Status { Id = 2, Name = StaticStrings.Status.Accepted},
+				new Status { Id = 3, Name = StaticStrings.Status.Rejected},
+				new Status { Id = 4, Name = StaticStrings.Status.Submitted}
 			};
 
 			builder.HasData(data);

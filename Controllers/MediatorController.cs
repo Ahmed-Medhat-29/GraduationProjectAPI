@@ -9,7 +9,6 @@ using GraduationProjectAPI.Models;
 using GraduationProjectAPI.Utilities.AuthenticationConfigurations;
 using GraduationProjectAPI.Utilities.CustomApiResponses;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -30,9 +29,7 @@ namespace GraduationProjectAPI.Controllers
 
 		[HttpPost("[action]")]
 		[RequestFormLimits(MultipartBodyLengthLimit = 1024 * 1024)]
-		[ProducesResponseType(typeof(Success), StatusCodes.Status200OK)]
-		[ProducesResponseType(typeof(BadRequest), StatusCodes.Status400BadRequest)]
-		public async Task<IActionResult> Register([FromForm] MediatorRegister model, string firebaseToken)
+		public async Task<IActionResult> Register([FromForm] MediatorRegister model)
 		{
 			var result = await IsMediatorRegisteredAsync(model);
 			if (result != null)
@@ -54,7 +51,6 @@ namespace GraduationProjectAPI.Controllers
 		[Authorize]
 		[HttpPatch("[action]")]
 		[RequestFormLimits(MultipartBodyLengthLimit = 1024 * 1024)]
-		[ProducesResponseType(typeof(Success), StatusCodes.Status200OK)]
 		public async Task<IActionResult> CompleteProfile([FromForm] MediatorRegisterCompletion model)
 		{
 			var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
@@ -65,8 +61,6 @@ namespace GraduationProjectAPI.Controllers
 		}
 
 		[HttpPost("[action]")]
-		[ProducesResponseType(typeof(Success), StatusCodes.Status200OK)]
-		[ProducesResponseType(typeof(BadRequest), StatusCodes.Status400BadRequest)]
 		public async Task<IActionResult> SignIn([FromForm] MediatorSignIn model, [FromServices] IAuthenticationTokenGenerator tokenGenerator)
 		{
 			var mediator = await _context.Mediators
@@ -75,24 +69,31 @@ namespace GraduationProjectAPI.Controllers
 				{
 					Id = m.Id,
 					Name = m.Name,
+					NotificationToken = m.NotificationToken,
 					Status = new Status { Name = m.Status.Name }
 				}).FirstOrDefaultAsync();
 
-			var result = CheckStatusValidation(mediator);
-			if (result != null)
-				return result;
+			var errors = ValidateStatus(mediator);
+			if (errors != null)
+				return errors;
 
-			var list = new List<KeyValuePair<string, string>>();
-			list.Add(new KeyValuePair<string, string>("PhoneNumber", model.PhoneNumber));
-			list.Add(new KeyValuePair<string, string>("IMEI", model.IMEI));
-			list.Add(new KeyValuePair<string, string>("FirebaseToken", model.FirebaseToken));
-			var token = tokenGenerator.Generate(mediator.Id.ToString(), list);
+			if (mediator.NotificationToken != model.FirebaseToken)
+			{
+				_context.Attach(mediator);
+				mediator.NotificationToken = model.FirebaseToken;
+				await _context.SaveChangesAsync();
+			}
+
+			var token = tokenGenerator.Generate(mediator.Id.ToString(), new[]
+				{
+					new KeyValuePair<string, string>("PhoneNumber", model.PhoneNumber),
+					new KeyValuePair<string, string>("IMEI", model.IMEI)
+				});
 			return new Success(token);
 		}
 
 		[Authorize]
 		[HttpGet("[action]")]
-		[ProducesResponseType(typeof(MediatorProfile), StatusCodes.Status200OK)]
 		public async Task<IActionResult> Profile()
 		{
 			var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
@@ -127,8 +128,6 @@ namespace GraduationProjectAPI.Controllers
 		}
 
 		[HttpPost("[action]")]
-		[ProducesResponseType(typeof(Success), StatusCodes.Status200OK)]
-		[ProducesResponseType(typeof(BadRequest), StatusCodes.Status400BadRequest)]
 		public async Task<IActionResult> ValidateNumber([FromForm] MediatorPhoneNumber numberDTO)
 		{
 			var isNumberRegistered = await _context.Mediators.AsNoTracking().AnyAsync(m => m.PhoneNumber == numberDTO.PhoneNumber);
@@ -137,7 +136,7 @@ namespace GraduationProjectAPI.Controllers
 
 		private async Task<BadRequest> IsMediatorRegisteredAsync(MediatorRegister model)
 		{
-			var mediator = await _context.Mediators.AsNoTracking()
+			var mediator = await _context.Mediators
 				.Select(m => new Mediator
 				{
 					NationalId = m.NationalId,
@@ -153,10 +152,10 @@ namespace GraduationProjectAPI.Controllers
 				return new BadRequest(nameof(model.NationalId), "National id already exists");
 		}
 
-		private BadRequest CheckStatusValidation(Mediator mediator)
+		private BadRequest ValidateStatus(Mediator mediator)
 		{
 			if (mediator == null)
-				return new BadRequest(nameof(mediator.PhoneNumber), "Please register first");
+				return new BadRequest("Please register first");
 
 			if (mediator.Status.Name == Utilities.StaticStrings.Status.Pending || mediator.Status.Name == Utilities.StaticStrings.Status.Submitted)
 				return new BadRequest(nameof(mediator.Status.Name), "Your registeration request is pending...");

@@ -8,19 +8,16 @@ namespace GraduationProjectAPI.Utilities
 	{
 		public static void Log(HttpRequest request)
 		{
-			var strBuilder = new StringBuilder();
-			strBuilder.AppendLine("ContentType " + request.ContentType.ToString());
+			var builder = new StringBuilder($"ContentType {request.ContentType}\n");
 			if (request.HasFormContentType)
-			{
 				using (var enumerator = request.Form.GetEnumerator())
 					while (enumerator.MoveNext())
-					{
-						var item = enumerator.Current;
-						strBuilder.AppendLine("Key: " + item.Key + " | Value: " + item.Value);
-					}
-			}
-			
-			File.WriteAllText("log.txt", strBuilder.ToString());
+						builder.AppendLine($"Key: {enumerator.Current.Key} | Value: {enumerator.Current.Value}");
+
+			if (!Directory.Exists("wwwroot"))
+				Directory.CreateDirectory("wwwroot");
+
+			File.WriteAllText(@"wwwroot\log.txt", builder.ToString());
 		}
 	}
 }

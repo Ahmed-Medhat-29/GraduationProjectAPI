@@ -365,3 +365,6 @@ FodyWeavers.xsd
 # User defined
 Images/
 appsettings.*
+.vscode/launch.json
+.vscode/tasks.json
+log.txt

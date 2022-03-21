@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using GraduationProjectAPI.DTOs;
+using GraduationProjectAPI.DTOs.Case;
 using GraduationProjectAPI.DTOs.Mediator;
 using GraduationProjectAPI.Models;
 
@@ -9,9 +10,10 @@ namespace GraduationProjectAPI.Utilities
 	{
 		public MapperProfile()
 		{
-			CreateMap<MediatorRegister, Mediator>().ReverseMap();
+			CreateMap<MediatorRegister, Mediator>().ForMember(d => d.NotificationToken, opt => opt.MapFrom(src => src.FirebaseToken));
 			CreateMap<Mediator, MediatorProfile>();
-			CreateMap<GeoLocationDto, GeoLocation>().ReverseMap();
+			CreateMap<GeoLocationDto, GeoLocation>();
+			CreateMap<CaseAddingDto, Case>().ForMember(d => d.NationalIdImage, act => act.Ignore());
 			CreateMap<Governorate, GovernorateDto>();
 			CreateMap<City, CityDto>();
 			CreateMap<Region, RegionDto>();

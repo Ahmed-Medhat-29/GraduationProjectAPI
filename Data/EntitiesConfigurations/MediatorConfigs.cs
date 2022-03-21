@@ -8,8 +8,8 @@ namespace GraduationProjectAPI.Data.EntitiesConfigurations
 	{
 		public void Configure(EntityTypeBuilder<Mediator> builder)
 		{
-			builder.HasAlternateKey(m => m.NationalId);
-			builder.HasAlternateKey(m => m.PhoneNumber);
+			builder.HasIndex(m => m.NationalId).IsUnique();
+			builder.HasIndex(m => m.PhoneNumber).IsUnique();
 
 			builder.HasOne(m => m.GeoLocation)
 				.WithOne()

@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Swashbuckle.AspNetCore.SwaggerGen;
@@ -33,13 +34,12 @@ namespace GraduationProjectAPI
 				.AddJwtBearer(options =>
 				{
 					options.SaveToken = false;
-					options.RequireHttpsMetadata = false;
 					options.TokenValidationParameters = new TokenValidationParameters()
 					{
 						ValidateLifetime = true,
+						ValidateIssuer = false,
+						ValidateAudience = false,
 						ValidateIssuerSigningKey = true,
-						ValidateIssuer = true,
-						ValidateAudience = true,
 						ValidIssuer = _config["JWT:Issuer"],
 						ValidAudience = _config["JWT:Audience"],
 						IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["JWT:Key"]))
@@ -50,7 +50,11 @@ namespace GraduationProjectAPI
 				.ConfigureApiBehaviorOptions(options =>
 					options.InvalidModelStateResponseFactory = actionContext => new BadRequest(actionContext.ModelState))
 				.AddJsonOptions(options =>
-					options.JsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase);
+				{
+					options.JsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
+					options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+					options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+				});
 
 			services.AddAutoMapper(options => options.AddProfile<MapperProfile>());
 			services.AddScoped<IAuthenticationTokenGenerator, JwtGenerator>();
@@ -59,7 +63,7 @@ namespace GraduationProjectAPI
 			services.AddSwaggerGen();
 		}
 
-		public void Configure(IApplicationBuilder app)
+		public void Configure(IApplicationBuilder app, IHostEnvironment env)
 		{
 			app.UseDeveloperExceptionPage();
 			app.UseSwagger();
@@ -69,11 +73,15 @@ namespace GraduationProjectAPI
 				c.RoutePrefix = string.Empty;
 			});
 
-			//app.Use(async (context, next) =>
-			//{
-			//	HttpRequestLogger.Log(context.Request);
-			//	await next.Invoke();
-			//});
+			app.UseStaticFiles();
+			app.Use(async (context, next) =>
+			{
+				if (context.Request.Method == "POST")
+					HttpRequestLogger.Log(context.Request);
+
+				await next.Invoke();
+			});
+
 			app.UseRouting();
 			app.UseAuthentication();
 			app.UseAuthorization();

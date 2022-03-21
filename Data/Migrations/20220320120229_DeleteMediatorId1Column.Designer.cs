@@ -10,15 +10,15 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace GraduationProjectAPI.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20220308065644_InitialModel")]
-    partial class InitialModel
+    [Migration("20220320120229_DeleteMediatorId1Column")]
+    partial class DeleteMediatorId1Column
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
-                .HasAnnotation("ProductVersion", "5.0.14")
+                .HasAnnotation("ProductVersion", "5.0.15")
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
             modelBuilder.Entity("GraduationProjectAPI.Models.Case", b =>
@@ -56,6 +56,9 @@ namespace GraduationProjectAPI.Migrations
                     b.Property<int>("GeoLocationId")
                         .HasColumnType("int");
 
+                    b.Property<int>("MediatorId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(250)
@@ -66,9 +69,8 @@ namespace GraduationProjectAPI.Migrations
                         .HasMaxLength(14)
                         .HasColumnType("varchar(14)");
 
-                    b.Property<string>("NationalIdImagePath")
-                        .HasMaxLength(4000)
-                        .HasColumnType("nvarchar(4000)");
+                    b.Property<byte[]>("NationalIdImage")
+                        .HasColumnType("varbinary(max)");
 
                     b.Property<int>("NeededMoneyAmount")
                         .HasColumnType("int");
@@ -99,7 +101,9 @@ namespace GraduationProjectAPI.Migrations
                         .HasColumnType("nvarchar(4000)");
 
                     b.Property<string>("Title")
-                        .HasColumnType("nvarchar(max)");
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
 
                     b.HasKey("Id");
 
@@ -109,6 +113,8 @@ namespace GraduationProjectAPI.Migrations
 
                     b.HasIndex("GeoLocationId")
                         .IsUnique();
+
+                    b.HasIndex("MediatorId");
 
                     b.HasIndex("PriorityId");
 
@@ -136,6 +142,18 @@ namespace GraduationProjectAPI.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Categories");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = (byte)1,
+                            Name = "Medical"
+                        },
+                        new
+                        {
+                            Id = (byte)2,
+                            Name = "Poverty"
+                        });
                 });
 
             modelBuilder.Entity("GraduationProjectAPI.Models.CaseProperties.Image", b =>
@@ -148,10 +166,9 @@ namespace GraduationProjectAPI.Migrations
                     b.Property<int>("CaseId")
                         .HasColumnType("int");
 
-                    b.Property<string>("Path")
+                    b.Property<byte[]>("Data")
                         .IsRequired()
-                        .HasMaxLength(4000)
-                        .HasColumnType("nvarchar(4000)");
+                        .HasColumnType("varbinary(max)");
 
                     b.HasKey("Id");
 
@@ -173,6 +190,23 @@ namespace GraduationProjectAPI.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Priorities");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = (byte)1,
+                            Name = "Urgent"
+                        },
+                        new
+                        {
+                            Id = (byte)2,
+                            Name = "High"
+                        },
+                        new
+                        {
+                            Id = (byte)3,
+                            Name = "Normal"
+                        });
                 });
 
             modelBuilder.Entity("GraduationProjectAPI.Models.CaseProperties.Relationship", b =>
@@ -188,6 +222,23 @@ namespace GraduationProjectAPI.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Relationships");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = (byte)1,
+                            Name = "Self"
+                        },
+                        new
+                        {
+                            Id = (byte)2,
+                            Name = "Family"
+                        },
+                        new
+                        {
+                            Id = (byte)3,
+                            Name = "Neighbor"
+                        });
                 });
 
             modelBuilder.Entity("GraduationProjectAPI.Models.City", b =>
@@ -268,6 +319,11 @@ namespace GraduationProjectAPI.Migrations
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
+                    b.Property<string>("Details")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
                     b.Property<decimal>("Latitude")
                         .HasColumnType("decimal(8,6)");
 
@@ -334,18 +390,21 @@ namespace GraduationProjectAPI.Migrations
                         .HasMaxLength(14)
                         .HasColumnType("varchar(14)");
 
-                    b.Property<string>("NationalIdImageName")
+                    b.Property<byte[]>("NationalIdImage")
+                        .IsRequired()
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<string>("NotificationToken")
                         .HasMaxLength(4000)
-                        .HasColumnType("nvarchar(4000)");
+                        .HasColumnType("varchar(4000)");
 
                     b.Property<string>("PhoneNumber")
                         .IsRequired()
                         .HasMaxLength(11)
                         .HasColumnType("varchar(11)");
 
-                    b.Property<string>("ProfileImageName")
-                        .HasMaxLength(4000)
-                        .HasColumnType("nvarchar(4000)");
+                    b.Property<byte[]>("ProfileImage")
+                        .HasColumnType("varbinary(max)");
 
                     b.Property<int?>("RegionId")
                         .HasColumnType("int");
@@ -358,13 +417,15 @@ namespace GraduationProjectAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasAlternateKey("NationalId");
-
-                    b.HasAlternateKey("PhoneNumber");
-
                     b.HasIndex("GenderId");
 
                     b.HasIndex("GeoLocationId")
+                        .IsUnique();
+
+                    b.HasIndex("NationalId")
+                        .IsUnique();
+
+                    b.HasIndex("PhoneNumber")
                         .IsUnique();
 
                     b.HasIndex("RegionId");
@@ -492,6 +553,12 @@ namespace GraduationProjectAPI.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("GraduationProjectAPI.Models.Mediator", "Mediator")
+                        .WithMany("CasesAdded")
+                        .HasForeignKey("MediatorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("GraduationProjectAPI.Models.CaseProperties.Priority", "Priority")
                         .WithMany("Cases")
                         .HasForeignKey("PriorityId")
@@ -527,6 +594,8 @@ namespace GraduationProjectAPI.Migrations
                     b.Navigation("Gender");
 
                     b.Navigation("GeoLocation");
+
+                    b.Navigation("Mediator");
 
                     b.Navigation("Priority");
 
@@ -637,6 +706,11 @@ namespace GraduationProjectAPI.Migrations
             modelBuilder.Entity("GraduationProjectAPI.Models.Governorate", b =>
                 {
                     b.Navigation("Cities");
+                });
+
+            modelBuilder.Entity("GraduationProjectAPI.Models.Mediator", b =>
+                {
+                    b.Navigation("CasesAdded");
                 });
 #pragma warning restore 612, 618
         }

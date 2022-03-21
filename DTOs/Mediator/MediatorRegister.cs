@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using GraduationProjectAPI.Utilities.CustomValidationAttributes;
 using Microsoft.AspNetCore.Http;
 
 namespace GraduationProjectAPI.DTOs.Mediator
@@ -18,7 +17,10 @@ namespace GraduationProjectAPI.DTOs.Mediator
 		[Required, MaxLength(14), MinLength(14), RegularExpression("^[0-9]+$", ErrorMessage = "National id must be only numbers")]
 		public string NationalId { get; set; }
 
-		[RequiredFile]
+		[Required, MaxLength(4000)]
+		public string FirebaseToken { get; set; }
+
+		[Required]
 		public IFormFile NatoinalIdImage { get; set; }
 
 		[Range(1, 2)]

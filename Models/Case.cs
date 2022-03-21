@@ -2,8 +2,12 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.IO;
+using System.Threading.Tasks;
 using GraduationProjectAPI.Models.CaseProperties;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Image = GraduationProjectAPI.Models.CaseProperties.Image;
 
 namespace GraduationProjectAPI.Models
 {
@@ -33,18 +37,21 @@ namespace GraduationProjectAPI.Models
 		public DateTime? DateLimit { get; set; }
 
 		[Column(TypeName = "date")]
-		public DateTime DateRequested { get; set; }
+		public DateTime DateRequested { get; set; } = DateTime.Now;
 
-		[MaxLength(4000)]
-		public string NationalIdImagePath { get; set; }
+		public byte[] NationalIdImage { get; set; }
 
 		[MaxLength(4000)]
 		public string Address { get; set; }
 
+		[Required, MaxLength(250)]
 		public string Title { get; set; }
 
 		[Required, MaxLength(4000)]
 		public string Story { get; set; }
+
+		public Mediator Mediator { get; set; }
+		public int MediatorId { get; set; }
 
 		public Category Category { get; set; }
 		public byte CategoryId { get; set; }
@@ -71,5 +78,23 @@ namespace GraduationProjectAPI.Models
 		public byte StatusId { get; set; }
 
 		public ICollection<Image> Images { get; set; }
+
+		public async Task SetNationalIdImageAsync(IFormFile nationalIdImage)
+		{
+			using (var stream = new MemoryStream())
+			{
+				await nationalIdImage.CopyToAsync(stream);
+				NationalIdImage = stream.ToArray();
+			}
+		}
+
+		public void AddOptionalImages(IEnumerable<IFormFile> images)
+		{
+			if (Images == null)
+				Images = new List<Image>();
+
+			foreach (var image in images)
+				Images.Add(new Image(image));
+		}
 	}
 }

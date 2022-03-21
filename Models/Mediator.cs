@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.IO;
@@ -33,7 +34,7 @@ namespace GraduationProjectAPI.Models
 		[MaxLength(4000)]
 		public string Bio { get; set; }
 
-		//[Required]
+		[Required]
 		public byte[] NationalIdImage { get; set; }
 
 		public byte[] ProfileImage { get; set; }
@@ -52,6 +53,11 @@ namespace GraduationProjectAPI.Models
 
 		public Status Status { get; set; }
 		public byte StatusId { get; set; }
+
+		public ICollection<Case> CasesAdded { get; set; }
+
+		[MaxLength(4000), Column(TypeName = "varchar")]
+		public string NotificationToken { get; set; }
 
 		public async Task SetNationalIdImageAsync(IFormFile nationalIdImage)
 		{
