@@ -1,5 +1,8 @@
 ﻿using GraduationProjectAPI.Models;
 using GraduationProjectAPI.Models.CaseProperties;
+using GraduationProjectAPI.Models.Location;
+using GraduationProjectAPI.Models.Reviews;
+using GraduationProjectAPI.Models.Shared;
 using Microsoft.EntityFrameworkCore;
 
 namespace GraduationProjectAPI.Data
@@ -20,6 +23,8 @@ namespace GraduationProjectAPI.Data
 		public DbSet<Region> Regions { get; set; }
 		public DbSet<Mediator> Mediators { get; set; }
 		public DbSet<GeoLocation> GeoLocations { get; set; }
+		public DbSet<CaseReview> CaseReviews { get; set; }
+		public DbSet<Locale> Locales { get; set; }
 
 		public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
 		{

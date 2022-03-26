@@ -1,9 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
-namespace GraduationProjectAPI.Models.CaseProperties
+namespace GraduationProjectAPI.Models.Shared
 {
-	public class Category
+	public class SocialStatus
 	{
 		public byte Id { get; set; }
 

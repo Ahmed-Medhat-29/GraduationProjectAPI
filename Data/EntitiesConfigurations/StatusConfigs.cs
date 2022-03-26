@@ -1,4 +1,4 @@
-﻿using GraduationProjectAPI.Models;
+﻿using GraduationProjectAPI.Models.Shared;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using StaticStrings = GraduationProjectAPI.Utilities.StaticStrings;

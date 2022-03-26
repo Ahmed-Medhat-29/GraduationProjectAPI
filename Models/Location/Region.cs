@@ -2,7 +2,7 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
-namespace GraduationProjectAPI.Models
+namespace GraduationProjectAPI.Models.Location
 {
 	public class Region
 	{

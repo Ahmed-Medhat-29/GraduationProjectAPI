@@ -66,13 +66,6 @@ namespace GraduationProjectAPI
 		public void Configure(IApplicationBuilder app, IHostEnvironment env)
 		{
 			app.UseDeveloperExceptionPage();
-			app.UseSwagger();
-			app.UseSwaggerUI(c =>
-			{
-				c.SwaggerEndpoint("swagger/v1/swagger.json", "Graduation Project API");
-				c.RoutePrefix = string.Empty;
-			});
-
 			app.UseStaticFiles();
 			app.Use(async (context, next) =>
 			{
@@ -80,6 +73,13 @@ namespace GraduationProjectAPI
 					HttpRequestLogger.Log(context.Request);
 
 				await next.Invoke();
+			});
+
+			app.UseSwagger();
+			app.UseSwaggerUI(c =>
+			{
+				c.SwaggerEndpoint("swagger/v1/swagger.json", "Graduation Project API");
+				c.RoutePrefix = string.Empty;
 			});
 
 			app.UseRouting();

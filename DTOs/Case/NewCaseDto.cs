@@ -1,11 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using GraduationProjectAPI.Utilities.CustomAttributes;
 using Microsoft.AspNetCore.Http;
 
 namespace GraduationProjectAPI.DTOs.Case
 {
-	public class CaseAddingDto
+	public class NewCaseDto
 	{
 		// Responsipility Holder
 
@@ -20,7 +20,7 @@ namespace GraduationProjectAPI.DTOs.Case
 		[Required, MaxLength(14), MinLength(14), RegularExpression("^[0-9]+$", ErrorMessage = "National id must be only numbers")]
 		public string NationalId { get; set; }
 
-		[Required]
+		[Required, ImageFile]
 		public IFormFile NationalIdImage { get; set; }
 
 		[Range(1, 2)]
@@ -64,6 +64,7 @@ namespace GraduationProjectAPI.DTOs.Case
 		[Range(1, byte.MaxValue)]
 		public byte PriorityId { get; set; }
 
-		public IEnumerable<IFormFile> OptionalImages { get; set; }
+		[ImageCollection(MaxSize = 1024 * 1024)]
+		public IFormFileCollection OptionalImages { get; set; }
 	}
 }

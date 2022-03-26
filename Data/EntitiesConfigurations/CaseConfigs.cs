@@ -32,11 +32,11 @@ namespace GraduationProjectAPI.Data.EntitiesConfigurations
 				.OnDelete(DeleteBehavior.Restrict);
 
 			builder.HasOne(c => c.Category)
-				.WithMany(cc => cc.Cases)
+				.WithMany()
 				.OnDelete(DeleteBehavior.Restrict);
 
 			builder.HasOne(c => c.Priority)
-				.WithMany(cp => cp.Cases)
+				.WithMany()
 				.OnDelete(DeleteBehavior.Restrict);
 
 			builder.HasOne(c => c.Relationship)

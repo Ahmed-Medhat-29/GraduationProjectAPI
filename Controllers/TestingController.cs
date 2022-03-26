@@ -8,8 +8,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GraduationProjectAPI.Controllers
 {
-	[Route("api/[controller]")]
 	[ApiController]
+	[Route("api/[controller]")]
 	public class TestingController : ControllerBase
 	{
 		private readonly ApplicationDbContext _context;
@@ -19,21 +19,21 @@ namespace GraduationProjectAPI.Controllers
 			_context = context;
 		}
 
-		[HttpGet("GetMediator/{id}")]
+		[HttpGet("[action]/{id}")]
 		public async Task<IActionResult> GetMediator(uint id)
 		{
 			var mediator = await _context.Mediators.AsNoTracking().Include(m => m.Status).FirstOrDefaultAsync(m => m.Id == id);
 			return mediator == null ? NotFound() : Ok(mediator);
 		}
 
-		[HttpGet("GetMediators")]
+		[HttpGet("[action]")]
 		public async Task<IActionResult> GetMediators()
 		{
 			var mediator = await _context.Mediators.AsNoTrackingWithIdentityResolution().Include(m => m.Status).ToArrayAsync();
 			return new Success(mediator);
 		}
 
-		[HttpPost("AcceptMediator/{id}")]
+		[HttpPost("[action]/{id}")]
 		public async Task<IActionResult> AcceptMediator(uint id)
 		{
 			var mediator = await _context.Mediators.FirstAsync(m => m.Id == id);
@@ -43,7 +43,7 @@ namespace GraduationProjectAPI.Controllers
 			return new Success();
 		}
 
-		[HttpPost("AcceptMediators")]
+		[HttpPost("[action]")]
 		public async Task<IActionResult> AcceptMediators()
 		{
 			var mediators = await _context.Mediators.ToArrayAsync();
@@ -53,6 +53,20 @@ namespace GraduationProjectAPI.Controllers
 
 			await _context.SaveChangesAsync();
 			return new Success();
+		}
+
+		[HttpGet("[action]/{id}")]
+		public async Task<IActionResult> GetCase(uint id)
+		{
+			var @case = await _context.Cases.AsNoTracking().Include(m => m.Status).FirstOrDefaultAsync(m => m.Id == id);
+			return @case == null ? NotFound() : Ok(@case);
+		}
+
+		[HttpGet("[action]")]
+		public async Task<IActionResult> GetCases()
+		{
+			var cases = await _context.Cases.AsNoTrackingWithIdentityResolution().Include(m => m.Status).ToArrayAsync();
+			return new Success(cases);
 		}
 	}
 }

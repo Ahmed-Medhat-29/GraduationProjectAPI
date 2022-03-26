@@ -4,14 +4,16 @@ using GraduationProjectAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace GraduationProjectAPI.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220321093520_ChangeNotificationTokenColumnNameToFirebaseToken")]
+    partial class ChangeNotificationTokenColumnNameToFirebaseToken
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -245,29 +247,6 @@ namespace GraduationProjectAPI.Migrations
                         });
                 });
 
-            modelBuilder.Entity("GraduationProjectAPI.Models.CaseReview", b =>
-                {
-                    b.Property<int>("MediatorId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("CaseId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasMaxLength(4000)
-                        .HasColumnType("nvarchar(4000)");
-
-                    b.Property<bool>("IsWorthy")
-                        .HasColumnType("bit");
-
-                    b.HasKey("MediatorId", "CaseId");
-
-                    b.HasIndex("CaseId");
-
-                    b.ToTable("CaseReviews");
-                });
-
             modelBuilder.Entity("GraduationProjectAPI.Models.City", b =>
                 {
                     b.Property<int>("Id")
@@ -379,21 +358,6 @@ namespace GraduationProjectAPI.Migrations
                     b.ToTable("Governorates");
                 });
 
-            modelBuilder.Entity("GraduationProjectAPI.Models.Locale", b =>
-                {
-                    b.Property<byte>("Id")
-                        .HasColumnType("tinyint");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("varchar(10)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Locales");
-                });
-
             modelBuilder.Entity("GraduationProjectAPI.Models.Mediator", b =>
                 {
                     b.Property<int>("Id")
@@ -412,9 +376,6 @@ namespace GraduationProjectAPI.Migrations
                     b.Property<DateTime?>("BirthDate")
                         .HasColumnType("date");
 
-                    b.Property<bool>("Completed")
-                        .HasColumnType("bit");
-
                     b.Property<string>("FirebaseToken")
                         .HasMaxLength(4000)
                         .HasColumnType("varchar(4000)");
@@ -428,9 +389,6 @@ namespace GraduationProjectAPI.Migrations
                     b.Property<string>("Job")
                         .HasMaxLength(250)
                         .HasColumnType("nvarchar(250)");
-
-                    b.Property<byte>("LocaleId")
-                        .HasColumnType("tinyint");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -469,8 +427,6 @@ namespace GraduationProjectAPI.Migrations
 
                     b.HasIndex("GeoLocationId")
                         .IsUnique();
-
-                    b.HasIndex("LocaleId");
 
                     b.HasIndex("NationalId")
                         .IsUnique();
@@ -586,7 +542,7 @@ namespace GraduationProjectAPI.Migrations
             modelBuilder.Entity("GraduationProjectAPI.Models.Case", b =>
                 {
                     b.HasOne("GraduationProjectAPI.Models.CaseProperties.Category", "Category")
-                        .WithMany()
+                        .WithMany("Cases")
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -610,7 +566,7 @@ namespace GraduationProjectAPI.Migrations
                         .IsRequired();
 
                     b.HasOne("GraduationProjectAPI.Models.CaseProperties.Priority", "Priority")
-                        .WithMany()
+                        .WithMany("Cases")
                         .HasForeignKey("PriorityId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -669,25 +625,6 @@ namespace GraduationProjectAPI.Migrations
                     b.Navigation("Case");
                 });
 
-            modelBuilder.Entity("GraduationProjectAPI.Models.CaseReview", b =>
-                {
-                    b.HasOne("GraduationProjectAPI.Models.Case", "Case")
-                        .WithMany()
-                        .HasForeignKey("CaseId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("GraduationProjectAPI.Models.Mediator", "Mediator")
-                        .WithMany()
-                        .HasForeignKey("MediatorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Case");
-
-                    b.Navigation("Mediator");
-                });
-
             modelBuilder.Entity("GraduationProjectAPI.Models.City", b =>
                 {
                     b.HasOne("GraduationProjectAPI.Models.Governorate", "Governorate")
@@ -713,12 +650,6 @@ namespace GraduationProjectAPI.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("GraduationProjectAPI.Models.Locale", "Locale")
-                        .WithMany()
-                        .HasForeignKey("LocaleId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("GraduationProjectAPI.Models.Region", "Region")
                         .WithMany()
                         .HasForeignKey("RegionId")
@@ -739,8 +670,6 @@ namespace GraduationProjectAPI.Migrations
                     b.Navigation("Gender");
 
                     b.Navigation("GeoLocation");
-
-                    b.Navigation("Locale");
 
                     b.Navigation("Region");
 
@@ -763,6 +692,16 @@ namespace GraduationProjectAPI.Migrations
             modelBuilder.Entity("GraduationProjectAPI.Models.Case", b =>
                 {
                     b.Navigation("Images");
+                });
+
+            modelBuilder.Entity("GraduationProjectAPI.Models.CaseProperties.Category", b =>
+                {
+                    b.Navigation("Cases");
+                });
+
+            modelBuilder.Entity("GraduationProjectAPI.Models.CaseProperties.Priority", b =>
+                {
+                    b.Navigation("Cases");
                 });
 
             modelBuilder.Entity("GraduationProjectAPI.Models.City", b =>

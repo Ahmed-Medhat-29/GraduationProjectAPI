@@ -5,10 +5,10 @@ namespace GraduationProjectAPI.DTOs
 	public class GeoLocationDto
 	{
 		[Range(-180, 180)]
-		public decimal Longitude { get; set; }
+		public double Longitude { get; set; }
 
 		[Range(-90, 90)]
-		public decimal Latitude { get; set; }
+		public double Latitude { get; set; }
 
 		[Required, MaxLength(4000)]
 		public string Details { get; set; }

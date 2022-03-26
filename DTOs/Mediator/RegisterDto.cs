@@ -1,9 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using GraduationProjectAPI.Utilities.CustomAttributes;
 using Microsoft.AspNetCore.Http;
 
 namespace GraduationProjectAPI.DTOs.Mediator
 {
-	public class MediatorRegister
+	public class RegisterDto
 	{
 		[Required, MaxLength(250), MinLength(2)]
 		public string Name { get; set; }
@@ -20,7 +21,7 @@ namespace GraduationProjectAPI.DTOs.Mediator
 		[Required, MaxLength(4000)]
 		public string FirebaseToken { get; set; }
 
-		[Required]
+		[Required, ImageFile(MaxSize = 1024 * 1024)] // 1MB
 		public IFormFile NatoinalIdImage { get; set; }
 
 		[Range(1, 2)]

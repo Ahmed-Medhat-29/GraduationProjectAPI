@@ -4,14 +4,16 @@ using GraduationProjectAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace GraduationProjectAPI.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220325150331_CreateLocalesTable")]
+    partial class CreateLocalesTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -412,9 +414,6 @@ namespace GraduationProjectAPI.Migrations
                     b.Property<DateTime?>("BirthDate")
                         .HasColumnType("date");
 
-                    b.Property<bool>("Completed")
-                        .HasColumnType("bit");
-
                     b.Property<string>("FirebaseToken")
                         .HasMaxLength(4000)
                         .HasColumnType("varchar(4000)");
@@ -429,7 +428,7 @@ namespace GraduationProjectAPI.Migrations
                         .HasMaxLength(250)
                         .HasColumnType("nvarchar(250)");
 
-                    b.Property<byte>("LocaleId")
+                    b.Property<byte?>("LocaleId")
                         .HasColumnType("tinyint");
 
                     b.Property<string>("Name")
@@ -715,9 +714,7 @@ namespace GraduationProjectAPI.Migrations
 
                     b.HasOne("GraduationProjectAPI.Models.Locale", "Locale")
                         .WithMany()
-                        .HasForeignKey("LocaleId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .HasForeignKey("LocaleId");
 
                     b.HasOne("GraduationProjectAPI.Models.Region", "Region")
                         .WithMany()

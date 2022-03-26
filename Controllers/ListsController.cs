@@ -1,7 +1,5 @@
-﻿using System.Collections.Generic;
-using System.Linq;
+﻿using System.Linq;
 using System.Threading.Tasks;
-using AutoMapper;
 using GraduationProjectAPI.Data;
 using GraduationProjectAPI.DTOs;
 using GraduationProjectAPI.Utilities.CustomApiResponses;
@@ -15,33 +13,45 @@ namespace GraduationProjectAPI.Controllers
 	public class ListsController : ControllerBase
 	{
 		private readonly ApplicationDbContext _context;
-		private readonly IMapper _mapper;
 
-		public ListsController(ApplicationDbContext context, IMapper mapper)
+		public ListsController(ApplicationDbContext context)
 		{
 			_context = context;
-			_mapper = mapper;
 		}
 
 		[HttpGet("[action]")]
 		public async Task<IActionResult> Governorates()
 		{
-			var governorates = await _context.Governorates.AsNoTracking().ToArrayAsync();
-			return new Success(_mapper.Map<IEnumerable<GovernorateDto>>(governorates));
+			return new Success(await _context.Governorates
+				.Select(g => new SimpleList
+				{
+					Id = g.Id,
+					Name = g.Name
+				}).ToArrayAsync());
 		}
 
 		[HttpGet("[action]/{id}")]
 		public async Task<IActionResult> Cities(uint id)
 		{
-			var cities = await _context.Cities.AsNoTracking().Where(c => c.GovernorateId == id).ToArrayAsync();
-			return new Success(_mapper.Map<IEnumerable<CityDto>>(cities));
+			return new Success(await _context.Cities
+				.Where(c => c.GovernorateId == id)
+				.Select(g => new SimpleList
+				{
+					Id = g.Id,
+					Name = g.Name
+				}).ToArrayAsync());
 		}
 
 		[HttpGet("[action]/{id}")]
 		public async Task<IActionResult> Regions(uint id)
 		{
-			var regions = await _context.Regions.AsNoTracking().Where(r => r.CityId == id).ToArrayAsync();
-			return new Success(_mapper.Map<IEnumerable<RegionDto>>(regions));
+			return new Success(await _context.Regions
+				.Where(r => r.CityId == id)
+				.Select(g => new SimpleList
+				{
+					Id = g.Id,
+					Name = g.Name
+				}).ToArrayAsync());
 		}
 
 		[HttpGet("[action]")]
@@ -54,6 +64,24 @@ namespace GraduationProjectAPI.Controllers
 		public async Task<IActionResult> SocialStatus()
 		{
 			return new Success(await _context.SocialStatus.AsNoTracking().ToArrayAsync());
+		}
+
+		[HttpGet("[action]")]
+		public async Task<IActionResult> Categories()
+		{
+			return new Success(await _context.Categories.AsNoTracking().ToArrayAsync());
+		}
+
+		[HttpGet("[action]")]
+		public async Task<IActionResult> Relationships()
+		{
+			return new Success(await _context.Relationships.AsNoTracking().ToArrayAsync());
+		}
+
+		[HttpGet("[action]")]
+		public async Task<IActionResult> Priorities()
+		{
+			return new Success(await _context.Priorities.AsNoTracking().ToArrayAsync());
 		}
 	}
 }

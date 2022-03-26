@@ -19,15 +19,30 @@ namespace GraduationProjectAPI.Utilities.AuthenticationConfigurations
 			_config = config;
 		}
 
-		public string Generate(string id, IEnumerable<KeyValuePair<string, string>> data)
+		public string Generate(string id, IDictionary<string, string> data)
+		{
+			var claims = new List<Claim>();
+			claims.Add(new Claim(ClaimTypes.NameIdentifier, id));
+
+			if (data != null)
+				claims.AddRange(data.Select(d => new Claim(d.Key, d.Value)));
+
+			return SetToken(claims);
+		}
+
+		public string Generate(string id)
+		{
+			return SetToken(new Claim[]
+			{
+				new Claim(ClaimTypes.NameIdentifier, id)
+			});
+		}
+
+		private string SetToken(IEnumerable<Claim> claims)
 		{
 			var key = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_config["JWT:Key"]));
 			var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 			var durationInMinutes = double.Parse(_config["JWT:DurationInMinutes"]);
-
-			var claims = new List<Claim>();
-			claims.Add(new Claim(ClaimTypes.NameIdentifier, id));
-			claims.AddRange(data.Select(d => new Claim(d.Key, d.Value)));
 
 			var securityToken = new JwtSecurityToken(
 				issuer: _config["JWT:Issuer"],

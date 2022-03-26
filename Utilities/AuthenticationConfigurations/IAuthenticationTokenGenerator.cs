@@ -5,6 +5,7 @@ namespace GraduationProjectAPI.Utilities.AuthenticationConfigurations
 	public interface IAuthenticationTokenGenerator
 	{
 		string Token { get; }
-		string Generate(string id, IEnumerable<KeyValuePair<string, string>> data);
+		string Generate(string id);
+		string Generate(string id, IDictionary<string, string> data);
 	}
 }

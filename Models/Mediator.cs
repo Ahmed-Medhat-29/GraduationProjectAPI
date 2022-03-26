@@ -2,9 +2,8 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.IO;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+using GraduationProjectAPI.Models.Location;
+using GraduationProjectAPI.Models.Shared;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace GraduationProjectAPI.Models
@@ -22,17 +21,22 @@ namespace GraduationProjectAPI.Models
 		[Required, MaxLength(14), Column(TypeName = "varchar")]
 		public string NationalId { get; set; }
 
+		[Column(TypeName = "date")]
+		public DateTime? BirthDate { get; set; }
+
+		[MaxLength(4000)]
+		public string Bio { get; set; }
+
 		[MaxLength(250)]
 		public string Job { get; set; }
 
 		[MaxLength(4000)]
 		public string Address { get; set; }
 
-		[Column(TypeName = "date")]
-		public DateTime? BirthDate { get; set; }
+		[MaxLength(4000), Column(TypeName = "varchar")]
+		public string FirebaseToken { get; set; }
 
-		[MaxLength(4000)]
-		public string Bio { get; set; }
+		public bool Completed { get; set; }
 
 		[Required]
 		public byte[] NationalIdImage { get; set; }
@@ -54,27 +58,9 @@ namespace GraduationProjectAPI.Models
 		public Status Status { get; set; }
 		public byte StatusId { get; set; }
 
+		public Locale Locale { get; set; }
+		public byte LocaleId { get; set; }
+
 		public ICollection<Case> CasesAdded { get; set; }
-
-		[MaxLength(4000), Column(TypeName = "varchar")]
-		public string NotificationToken { get; set; }
-
-		public async Task SetNationalIdImageAsync(IFormFile nationalIdImage)
-		{
-			using (var stream = new MemoryStream())
-			{
-				await nationalIdImage.CopyToAsync(stream);
-				NationalIdImage = stream.ToArray();
-			}
-		}
-
-		public async Task SetProfileImageAsync(IFormFile profileImage)
-		{
-			using (var stream = new MemoryStream())
-			{
-				await profileImage.CopyToAsync(stream);
-				ProfileImage = stream.ToArray();
-			}
-		}
 	}
 }

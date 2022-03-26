@@ -5,6 +5,8 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.IO;
 using System.Threading.Tasks;
 using GraduationProjectAPI.Models.CaseProperties;
+using GraduationProjectAPI.Models.Location;
+using GraduationProjectAPI.Models.Shared;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Image = GraduationProjectAPI.Models.CaseProperties.Image;
@@ -37,7 +39,7 @@ namespace GraduationProjectAPI.Models
 		public DateTime? DateLimit { get; set; }
 
 		[Column(TypeName = "date")]
-		public DateTime DateRequested { get; set; } = DateTime.Now;
+		public DateTime DateRequested { get; private set; } = DateTime.Now;
 
 		public byte[] NationalIdImage { get; set; }
 

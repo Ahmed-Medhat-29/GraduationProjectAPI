@@ -30,6 +30,10 @@ namespace GraduationProjectAPI.Data.EntitiesConfigurations
 			builder.HasOne(m => m.Region)
 				.WithMany()
 				.OnDelete(DeleteBehavior.Restrict);
+
+			builder.HasOne(m => m.Locale)
+				.WithMany()
+				.OnDelete(DeleteBehavior.Restrict);
 		}
 	}
 }

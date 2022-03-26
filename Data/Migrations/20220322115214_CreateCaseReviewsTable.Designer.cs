@@ -4,14 +4,16 @@ using GraduationProjectAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace GraduationProjectAPI.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220322115214_CreateCaseReviewsTable")]
+    partial class CreateCaseReviewsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -379,21 +381,6 @@ namespace GraduationProjectAPI.Migrations
                     b.ToTable("Governorates");
                 });
 
-            modelBuilder.Entity("GraduationProjectAPI.Models.Locale", b =>
-                {
-                    b.Property<byte>("Id")
-                        .HasColumnType("tinyint");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("varchar(10)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Locales");
-                });
-
             modelBuilder.Entity("GraduationProjectAPI.Models.Mediator", b =>
                 {
                     b.Property<int>("Id")
@@ -412,9 +399,6 @@ namespace GraduationProjectAPI.Migrations
                     b.Property<DateTime?>("BirthDate")
                         .HasColumnType("date");
 
-                    b.Property<bool>("Completed")
-                        .HasColumnType("bit");
-
                     b.Property<string>("FirebaseToken")
                         .HasMaxLength(4000)
                         .HasColumnType("varchar(4000)");
@@ -428,9 +412,6 @@ namespace GraduationProjectAPI.Migrations
                     b.Property<string>("Job")
                         .HasMaxLength(250)
                         .HasColumnType("nvarchar(250)");
-
-                    b.Property<byte>("LocaleId")
-                        .HasColumnType("tinyint");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -469,8 +450,6 @@ namespace GraduationProjectAPI.Migrations
 
                     b.HasIndex("GeoLocationId")
                         .IsUnique();
-
-                    b.HasIndex("LocaleId");
 
                     b.HasIndex("NationalId")
                         .IsUnique();
@@ -713,12 +692,6 @@ namespace GraduationProjectAPI.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("GraduationProjectAPI.Models.Locale", "Locale")
-                        .WithMany()
-                        .HasForeignKey("LocaleId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("GraduationProjectAPI.Models.Region", "Region")
                         .WithMany()
                         .HasForeignKey("RegionId")
@@ -739,8 +712,6 @@ namespace GraduationProjectAPI.Migrations
                     b.Navigation("Gender");
 
                     b.Navigation("GeoLocation");
-
-                    b.Navigation("Locale");
 
                     b.Navigation("Region");
 
