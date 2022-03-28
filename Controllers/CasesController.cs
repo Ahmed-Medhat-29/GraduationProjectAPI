@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using AutoMapper;
@@ -7,6 +8,7 @@ using GraduationProjectAPI.DTOs.Case;
 using GraduationProjectAPI.Models;
 using GraduationProjectAPI.Models.Reviews;
 using GraduationProjectAPI.Utilities.CustomApiResponses;
+using GraduationProjectAPI.Utilities.StaticStrings;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -24,6 +26,26 @@ namespace GraduationProjectAPI.Controllers
 		{
 			_context = context;
 			_mapper = mapper;
+		}
+
+		[HttpGet]
+		[Authorize]
+		public async Task<IActionResult> GetCases()
+		{
+			var cases = await _context.Cases
+				.Where(c => c.Status.Name == Status.Accepted)
+				.Select(c => new CaseElementDto
+				{
+					Id = c.Id,
+					Name = c.Name,
+					Title = c.Title,
+					Priority = c.Priority.Name,
+					Age = ((short)(DateTime.Now - c.DateRequested).TotalDays),
+					FundRaised = 4000,
+					ImageUrl = string.Concat(Request.Scheme, "://", Request.Host, Request.PathBase.ToString().ToLower(), "/api/cases/image")
+				}).ToArrayAsync();
+
+			return new Success(cases);
 		}
 
 		[HttpPost]

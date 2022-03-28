@@ -148,7 +148,7 @@ namespace GraduationProjectAPI.Controllers
 		}
 
 		[Authorize]
-		[HttpGet("NationalId/image")]
+		[HttpGet("nationalid/image")]
 		public async Task<IActionResult> NationalIdImage()
 		{
 			var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
@@ -208,10 +208,10 @@ namespace GraduationProjectAPI.Controllers
 			if (mediator == null)
 				return new BadRequest("Please register first");
 
-			if (mediator.Status.Name == Utilities.StaticStrings.Status.Pending || mediator.Status.Name == Utilities.StaticStrings.Status.Submitted)
+			if (mediator.Status.Name == Status.Pending || mediator.Status.Name == Status.Submitted)
 				return new BadRequest(nameof(mediator.Status.Name), "Your registeration request is pending...");
 
-			if (mediator.Status.Name == Utilities.StaticStrings.Status.Rejected)
+			if (mediator.Status.Name == Status.Rejected)
 				return new BadRequest(nameof(mediator.Status.Name), "Your registeration request has been rejected");
 
 			return null;
@@ -228,7 +228,7 @@ namespace GraduationProjectAPI.Controllers
 		private async Task SendNotificationForNewMediatorAsync(Mediator mediator)
 		{
 			var geoLocations = await _context.Mediators
-							.Where(m => m.Status.Name == Utilities.StaticStrings.Status.Accepted)
+							.Where(m => m.Status.Name == Status.Accepted)
 							.Select(m => new GeoLocation
 							{
 								Id = m.GeoLocation.Id,
@@ -237,7 +237,8 @@ namespace GraduationProjectAPI.Controllers
 							}).ToArrayAsync();
 
 			var mediatorCoordinate = new GeoCoordinate(mediator.GeoLocation.Latitude, mediator.GeoLocation.Longitude);
-			var closestLocationsId = geoLocations.OrderBy(l => mediatorCoordinate.GetDistanceTo(new GeoCoordinate(l.Latitude, l.Longitude)))
+			var closestLocationsId = geoLocations
+				.OrderBy(l => mediatorCoordinate.GetDistanceTo(new GeoCoordinate(l.Latitude, l.Longitude)))
 				.Select(l => l.Id)
 				.Take(5);
 

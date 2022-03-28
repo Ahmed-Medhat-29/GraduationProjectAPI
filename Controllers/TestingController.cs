@@ -22,22 +22,35 @@ namespace GraduationProjectAPI.Controllers
 		[HttpGet("[action]/{id}")]
 		public async Task<IActionResult> GetMediator(uint id)
 		{
-			var mediator = await _context.Mediators.AsNoTracking().Include(m => m.Status).FirstOrDefaultAsync(m => m.Id == id);
-			return mediator == null ? NotFound() : Ok(mediator);
+			var mediator = await _context.Mediators.AsNoTrackingWithIdentityResolution()
+				.Include(m => m.Status)
+				.FirstOrDefaultAsync(m => m.Id == id);
+
+			if (mediator == null)
+				return new BadRequest($"Mediator with id: {id} could not be found");
+
+			return new Success(mediator);
 		}
 
 		[HttpGet("[action]")]
 		public async Task<IActionResult> GetMediators()
 		{
-			var mediator = await _context.Mediators.AsNoTrackingWithIdentityResolution().Include(m => m.Status).ToArrayAsync();
-			return new Success(mediator);
+			return new Success(await _context.Mediators.AsNoTrackingWithIdentityResolution()
+				.Include(m => m.Status)
+				.ToArrayAsync());
 		}
 
 		[HttpPost("[action]/{id}")]
 		public async Task<IActionResult> AcceptMediator(uint id)
 		{
-			var mediator = await _context.Mediators.FirstAsync(m => m.Id == id);
-			mediator.StatusId = await _context.Status.Where(s => s.Name == nameof(Status.Accepted)).Select(s => s.Id).FirstAsync();
+			var mediator = await _context.Mediators.FirstOrDefaultAsync(m => m.Id == id);
+			if (mediator == null)
+				return new BadRequest($"Mediator with id: {id} could not be found");
+
+			mediator.StatusId = await _context.Status
+				.Where(s => s.Name == Status.Accepted)
+				.Select(s => s.Id)
+				.FirstAsync();
 
 			await _context.SaveChangesAsync();
 			return new Success();
@@ -47,7 +60,10 @@ namespace GraduationProjectAPI.Controllers
 		public async Task<IActionResult> AcceptMediators()
 		{
 			var mediators = await _context.Mediators.ToArrayAsync();
-			var acceptedStatusId = await _context.Status.Where(s => s.Name == nameof(Status.Accepted)).Select(s => s.Id).FirstAsync();
+			if (mediators == null || mediators.Count() <= 0)
+				return new Success();
+
+			var acceptedStatusId = await _context.Status.Where(s => s.Name == Status.Accepted).Select(s => s.Id).FirstAsync();
 			foreach (var mediator in mediators)
 				mediator.StatusId = acceptedStatusId;
 
@@ -58,15 +74,22 @@ namespace GraduationProjectAPI.Controllers
 		[HttpGet("[action]/{id}")]
 		public async Task<IActionResult> GetCase(uint id)
 		{
-			var @case = await _context.Cases.AsNoTracking().Include(m => m.Status).FirstOrDefaultAsync(m => m.Id == id);
-			return @case == null ? NotFound() : Ok(@case);
+			var @case = await _context.Cases.AsNoTrackingWithIdentityResolution()
+				.Include(m => m.Status)
+				.FirstOrDefaultAsync(m => m.Id == id);
+
+			if (@case == null)
+				return new BadRequest($"Case with id: {id} could not be found");
+
+			return new Success(@case);
 		}
 
 		[HttpGet("[action]")]
 		public async Task<IActionResult> GetCases()
 		{
-			var cases = await _context.Cases.AsNoTrackingWithIdentityResolution().Include(m => m.Status).ToArrayAsync();
-			return new Success(cases);
+			return new Success(await _context.Cases.AsNoTrackingWithIdentityResolution()
+				.Include(m => m.Status)
+				.ToArrayAsync());
 		}
 	}
 }

@@ -23,7 +23,7 @@ namespace GraduationProjectAPI.Controllers
 		public async Task<IActionResult> Governorates()
 		{
 			return new Success(await _context.Governorates
-				.Select(g => new SimpleList
+				.Select(g => new ListItem
 				{
 					Id = g.Id,
 					Name = g.Name
@@ -35,7 +35,7 @@ namespace GraduationProjectAPI.Controllers
 		{
 			return new Success(await _context.Cities
 				.Where(c => c.GovernorateId == id)
-				.Select(g => new SimpleList
+				.Select(g => new ListItem
 				{
 					Id = g.Id,
 					Name = g.Name
@@ -47,7 +47,7 @@ namespace GraduationProjectAPI.Controllers
 		{
 			return new Success(await _context.Regions
 				.Where(r => r.CityId == id)
-				.Select(g => new SimpleList
+				.Select(g => new ListItem
 				{
 					Id = g.Id,
 					Name = g.Name
