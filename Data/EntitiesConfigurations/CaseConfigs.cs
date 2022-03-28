@@ -39,6 +39,10 @@ namespace GraduationProjectAPI.Data.EntitiesConfigurations
 				.WithMany()
 				.OnDelete(DeleteBehavior.Restrict);
 
+			builder.HasOne(c => c.Period)
+				.WithMany()
+				.OnDelete(DeleteBehavior.Restrict);
+
 			builder.HasOne(c => c.Relationship)
 				.WithMany()
 				.OnDelete(DeleteBehavior.Restrict);

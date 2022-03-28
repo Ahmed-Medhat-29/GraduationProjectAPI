@@ -65,23 +65,5 @@ namespace GraduationProjectAPI.Controllers
 		{
 			return new Success(await _context.SocialStatus.AsNoTracking().ToArrayAsync());
 		}
-
-		[HttpGet("[action]")]
-		public async Task<IActionResult> Categories()
-		{
-			return new Success(await _context.Categories.AsNoTracking().ToArrayAsync());
-		}
-
-		[HttpGet("[action]")]
-		public async Task<IActionResult> Relationships()
-		{
-			return new Success(await _context.Relationships.AsNoTracking().ToArrayAsync());
-		}
-
-		[HttpGet("[action]")]
-		public async Task<IActionResult> Priorities()
-		{
-			return new Success(await _context.Priorities.AsNoTracking().ToArrayAsync());
-		}
 	}
 }

@@ -40,7 +40,7 @@ namespace GraduationProjectAPI.DTOs.Case
 		[Range(1, int.MaxValue)]
 		public int NeededMoneyAmount { get; set; }
 
-		public DateTime? DateLimit { get; set; }
+		public DateTime PaymentDate { get; set; }
 
 		public byte Adults { get; set; }
 
@@ -60,6 +60,9 @@ namespace GraduationProjectAPI.DTOs.Case
 
 		[Range(1, byte.MaxValue)]
 		public byte CategoryId { get; set; }
+
+		[Range(1, byte.MaxValue)]
+		public byte PeriodId { get; set; }
 
 		[Range(1, byte.MaxValue)]
 		public byte PriorityId { get; set; }

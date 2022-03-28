@@ -1,4 +1,5 @@
-﻿using System.Net.Http;
+﻿using System;
+using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 
@@ -15,21 +16,23 @@ namespace GraduationProjectAPI.Utilities.NotificationsManagement
 
 		public async Task SendAsync(string token)
 		{
-			var client = CreateHttpClient();
-			var content = InitContent(token);
-			await MakeRequestAsync(client, content);
-			client.Dispose();
-		}
-
-		public async Task SendAsync(string[] tokens)
-		{
-			var client = CreateHttpClient();
-			foreach (var token in tokens)
+			using (var client = CreateHttpClient())
 			{
 				var content = InitContent(token);
 				await MakeRequestAsync(client, content);
 			}
-			client.Dispose();
+		}
+
+		public async Task SendAsync(string[] tokens)
+		{
+			using (var client = CreateHttpClient())
+			{
+				foreach (var token in tokens)
+				{
+					var content = InitContent(token);
+					await MakeRequestAsync(client, content);
+				}
+			}
 		}
 
 		private static HttpClient CreateHttpClient()
@@ -53,12 +56,22 @@ namespace GraduationProjectAPI.Utilities.NotificationsManagement
 
 		private static async Task MakeRequestAsync(HttpClient client, JsonContent content)
 		{
-			HttpResponseMessage response = null;
+			Exception notificationException;
+
 			do
 			{
-				response = await client.PostAsJsonAsync("https://fcm.googleapis.com/fcm/send", content.Value);
-			} while (response != null && response.StatusCode != System.Net.HttpStatusCode.OK);
-			response.Dispose();
+				notificationException = null;
+				try
+				{
+					var response = await client.PostAsJsonAsync("https://fcm.googleapis.com/fcm/send", content.Value);
+					response.Dispose();
+				}
+				catch (Exception e)
+				{
+					notificationException = e;
+				}
+
+			} while (notificationException != null);
 			//var responseMessage = await response.Content.ReadAsStringAsync();
 			//System.Console.WriteLine(responseMessage);
 		}

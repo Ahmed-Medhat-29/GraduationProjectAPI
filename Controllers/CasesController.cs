@@ -28,25 +28,43 @@ namespace GraduationProjectAPI.Controllers
 			_mapper = mapper;
 		}
 
-		[HttpGet]
 		[Authorize]
-		public async Task<IActionResult> GetCases()
+		[HttpGet("[action]")]
+		public async Task<IActionResult> Add()
 		{
-			var cases = await _context.Cases
-				.Where(c => c.Status.Name == Status.Accepted)
-				.Select(c => new CaseElementDto
-				{
-					Id = c.Id,
-					Name = c.Name,
-					Title = c.Title,
-					Priority = c.Priority.Name,
-					Age = ((short)(DateTime.Now - c.DateRequested).TotalDays),
-					FundRaised = 4000,
-					ImageUrl = string.Concat(Request.Scheme, "://", Request.Host, Request.PathBase.ToString().ToLower(), "/api/cases/image")
-				}).ToArrayAsync();
+			var properties = new CaseProperties
+			{
+				Genders = await _context.Genders.AsNoTracking().ToArrayAsync(),
+				SocialStatus = await _context.SocialStatus.AsNoTracking().ToArrayAsync(),
+				Relationships = await _context.Relationships.AsNoTracking().ToArrayAsync(),
+				Categories = await _context.Categories.AsNoTracking().ToArrayAsync(),
+				Periods = await _context.Periods.AsNoTracking().ToArrayAsync(),
+				Priorities = await _context.Priorities.AsNoTracking().ToArrayAsync()
+			};
 
-			return new Success(cases);
+			return new Success(properties);
 		}
+
+
+		//[HttpGet]
+		//[Authorize]
+		//public async Task<IActionResult> GetCases()
+		//{
+		//	var cases = await _context.Cases
+		//		.Where(c => c.Status.Name == Status.Accepted)
+		//		.Select(c => new CaseElementDto
+		//		{
+		//			Id = c.Id,
+		//			Name = c.Name,
+		//			Title = c.Title,
+		//			Priority = c.Priority.Name,
+		//			Age = ((short)(DateTime.Now - c.DateRequested).TotalDays),
+		//			FundRaised = 4000,
+		//			ImageUrl = string.Concat(Request.Scheme, "://", Request.Host, Request.PathBase.ToString().ToLower(), "/api/cases/image")
+		//		}).ToArrayAsync();
+
+		//	return new Success(cases);
+		//}
 
 		[HttpPost]
 		[Authorize]
@@ -57,7 +75,7 @@ namespace GraduationProjectAPI.Controllers
 				return result;
 
 			var pendingStatusId = _context.Status
-				.Where(s => s.Name == nameof(Utilities.StaticStrings.Status.Pending))
+				.Where(s => s.Name == Status.Pending)
 				.Select(s => s.Id)
 				.FirstAsync();
 

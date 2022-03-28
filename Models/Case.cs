@@ -36,7 +36,7 @@ namespace GraduationProjectAPI.Models
 		public int NeededMoneyAmount { get; set; }
 
 		[Column(TypeName = "date")]
-		public DateTime? DateLimit { get; set; }
+		public DateTime PaymentDate { get; set; }
 
 		[Column(TypeName = "date")]
 		public DateTime DateRequested { get; private set; } = DateTime.Now;
@@ -51,6 +51,9 @@ namespace GraduationProjectAPI.Models
 
 		[Required, MaxLength(4000)]
 		public string Story { get; set; }
+
+		public Period Period { get; set; }
+		public byte PeriodId { get; set; }
 
 		public Mediator Mediator { get; set; }
 		public int MediatorId { get; set; }
