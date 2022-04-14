@@ -1,5 +1,4 @@
-﻿using System;
-using System.Net.Http;
+﻿using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 
@@ -16,11 +15,9 @@ namespace GraduationProjectAPI.Utilities.NotificationsManagement
 
 		public async Task SendAsync(string token)
 		{
+			var content = InitContent(token);
 			using (var client = CreateHttpClient())
-			{
-				var content = InitContent(token);
 				await MakeRequestAsync(client, content);
-			}
 		}
 
 		public async Task SendAsync(string[] tokens)
@@ -56,22 +53,8 @@ namespace GraduationProjectAPI.Utilities.NotificationsManagement
 
 		private static async Task MakeRequestAsync(HttpClient client, JsonContent content)
 		{
-			Exception notificationException;
-
-			do
-			{
-				notificationException = null;
-				try
-				{
-					var response = await client.PostAsJsonAsync("https://fcm.googleapis.com/fcm/send", content.Value);
-					response.Dispose();
-				}
-				catch (Exception e)
-				{
-					notificationException = e;
-				}
-
-			} while (notificationException != null);
+			var response = await client.PostAsJsonAsync("https://fcm.googleapis.com/fcm/send", content.Value);
+			response.Dispose();
 			//var responseMessage = await response.Content.ReadAsStringAsync();
 			//System.Console.WriteLine(responseMessage);
 		}

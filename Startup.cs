@@ -59,8 +59,8 @@ namespace GraduationProjectAPI
 			services.AddAutoMapper(options => options.AddProfile<MapperProfile>());
 			services.AddScoped<IAuthenticationTokenGenerator, JwtGenerator>();
 
-			services.AddTransient<IConfigureOptions<SwaggerGenOptions>, SwaggerOptions>();
-			services.AddSwaggerGen();
+			//services.AddTransient<IConfigureOptions<SwaggerGenOptions>, SwaggerOptions>();
+			//services.AddSwaggerGen();
 		}
 
 		public void Configure(IApplicationBuilder app, IHostEnvironment env)
@@ -75,12 +75,12 @@ namespace GraduationProjectAPI
 				await next.Invoke();
 			});
 
-			app.UseSwagger();
-			app.UseSwaggerUI(c =>
-			{
-				c.SwaggerEndpoint("swagger/v1/swagger.json", "Graduation Project API");
-				c.RoutePrefix = string.Empty;
-			});
+			//app.UseSwagger();
+			//app.UseSwaggerUI(c =>
+			//{
+			//	c.SwaggerEndpoint("swagger/v1/swagger.json", "Graduation Project API");
+			//	c.RoutePrefix = string.Empty;
+			//});
 
 			app.UseRouting();
 			app.UseAuthentication();
