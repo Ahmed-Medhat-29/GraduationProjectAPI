@@ -1,11 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace GraduationProjectAPI.DTOs.Case
+namespace GraduationProjectAPI.DTOs
 {
 	public class ReviewDto
 	{
 		[Range(1, int.MaxValue)]
-		public int CaseId { get; set; }
+		public int RevieweeId { get; set; }
 
 		public bool IsWorthy { get; set; }
 

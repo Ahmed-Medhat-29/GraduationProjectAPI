@@ -11,6 +11,7 @@ using GraduationProjectAPI.DTOs.Mediator;
 using GraduationProjectAPI.Models;
 using GraduationProjectAPI.Models.CaseProperties;
 using GraduationProjectAPI.Models.Location;
+using GraduationProjectAPI.Models.Reviews;
 using GraduationProjectAPI.Utilities.AuthenticationConfigurations;
 using GraduationProjectAPI.Utilities.CustomApiResponses;
 using GraduationProjectAPI.Utilities.NotificationsManagement;
@@ -21,6 +22,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GraduationProjectAPI.Controllers
 {
+	[Authorize]
 	[ApiController]
 	[Route("api/[controller]")]
 	public class MediatorsController : ControllerBase
@@ -35,7 +37,6 @@ namespace GraduationProjectAPI.Controllers
 		}
 
 		[HttpGet("[action]")]
-		[Authorize]
 		public async Task<IActionResult> Home()
 		{
 			var cases = await _context.Cases
@@ -66,6 +67,7 @@ namespace GraduationProjectAPI.Controllers
 			return new Success(cases);
 		}
 
+		[AllowAnonymous]
 		[HttpPost("[action]")]
 		public async Task<IActionResult> Register([FromForm] RegisterDto dto)
 		{
@@ -83,6 +85,7 @@ namespace GraduationProjectAPI.Controllers
 			return new Success();
 		}
 
+		[AllowAnonymous]
 		[HttpPost("[action]")]
 		public async Task<IActionResult> SignIn([FromForm] SignInDto dto, [FromServices] IAuthenticationTokenGenerator tokenGenerator)
 		{
@@ -139,7 +142,6 @@ namespace GraduationProjectAPI.Controllers
 			return new Success(mediatorDto);
 		}
 
-		[Authorize]
 		[HttpPatch("[action]")]
 		public async Task<IActionResult> Profile([FromForm] ProfileCompletionDto dto)
 		{
@@ -150,7 +152,6 @@ namespace GraduationProjectAPI.Controllers
 			return new Success();
 		}
 
-		[Authorize]
 		[HttpGet("[action]")]
 		public async Task<IActionResult> Profile()
 		{
@@ -168,7 +169,6 @@ namespace GraduationProjectAPI.Controllers
 			return new Success(mediatorDto);
 		}
 
-		[Authorize]
 		[HttpGet("profile/image")]
 		public async Task<IActionResult> ProfileImage()
 		{
@@ -192,6 +192,46 @@ namespace GraduationProjectAPI.Controllers
 				.FirstOrDefaultAsync();
 
 			return image == null ? NotFound(null) : File(image, "image/jpeg");
+		}
+
+		[HttpPost("[action]")]
+		public async Task<IActionResult> Review([FromForm] ReviewDto dto)
+		{
+			var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+			if (dto.RevieweeId == userId)
+				return new BadRequest("You can't review yurself");
+
+			var isMediatorExists = await _context.Mediators.AnyAsync(m => m.Id == dto.RevieweeId && m.Status.Name == Status.Pending);
+			if (!isMediatorExists)
+				return new BadRequest("No pending mediator with such id found");
+
+			var isReviewExists = await _context.MediatorReviews.AnyAsync(m => m.RevieweeId == dto.RevieweeId && m.ReviewerId == userId);
+			if (isReviewExists)
+				return new BadRequest("You have reviewed this mediator already");
+
+			var review = _mapper.Map<MediatorReview>(dto);
+			review.ReviewerId = userId;
+
+			await _context.MediatorReviews.AddAsync(review);
+			await _context.SaveChangesAsync();
+
+			var reviewsCount = await _context.MediatorReviews.CountAsync(m => m.RevieweeId == dto.RevieweeId);
+			if (reviewsCount >= 3)
+			{
+				var mediator = await _context.Mediators
+					.Where(m => m.Id == dto.RevieweeId)
+					.Select(m => new Mediator
+					{
+						Id = m.Id
+					})
+					.FirstOrDefaultAsync();
+
+				_context.Mediators.Attach(mediator);
+				mediator.StatusId = await GetStatusIdAsync(Status.Submitted);
+				await _context.SaveChangesAsync();
+			}
+
+			return new Success();
 		}
 
 		[HttpPost("[action]")]

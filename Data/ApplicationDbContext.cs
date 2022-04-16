@@ -26,6 +26,7 @@ namespace GraduationProjectAPI.Data
 		public DbSet<Mediator> Mediators { get; set; }
 		public DbSet<GeoLocation> GeoLocations { get; set; }
 		public DbSet<CaseReview> CaseReviews { get; set; }
+		public DbSet<MediatorReview> MediatorReviews { get; set; }
 		public DbSet<Locale> Locales { get; set; }
 
 		public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)

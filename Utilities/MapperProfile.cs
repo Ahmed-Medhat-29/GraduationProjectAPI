@@ -18,6 +18,7 @@ namespace GraduationProjectAPI.Utilities
 
 			CreateMap<GeoLocationDto, GeoLocation>();
 			CreateMap<NewCaseDto, Case>().ForMember(d => d.NationalIdImage, act => act.Ignore());
+			CreateMap<ReviewDto, MediatorReview>();
 			CreateMap<ReviewDto, CaseReview>();
 		}
 	}

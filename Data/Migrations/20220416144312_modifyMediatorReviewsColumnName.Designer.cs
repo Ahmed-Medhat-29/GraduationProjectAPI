@@ -4,14 +4,16 @@ using GraduationProjectAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace GraduationProjectAPI.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220416144312_modifyMediatorReviewsColumnName")]
+    partial class modifyMediatorReviewsColumnName
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -429,7 +431,6 @@ namespace GraduationProjectAPI.Migrations
                         .HasColumnType("varchar(11)");
 
                     b.Property<byte[]>("ProfileImage")
-                        .IsRequired()
                         .HasColumnType("varbinary(max)");
 
                     b.Property<int?>("RegionId")
@@ -536,7 +537,11 @@ namespace GraduationProjectAPI.Migrations
 
                     b.HasKey("RevieweeId", "ReviewerId");
 
-                    b.HasIndex("ReviewerId");
+                    b.HasIndex("RevieweeId")
+                        .IsUnique();
+
+                    b.HasIndex("ReviewerId")
+                        .IsUnique();
 
                     b.ToTable("MediatorReviews");
                 });
@@ -856,14 +861,14 @@ namespace GraduationProjectAPI.Migrations
             modelBuilder.Entity("GraduationProjectAPI.Models.Reviews.MediatorReview", b =>
                 {
                     b.HasOne("GraduationProjectAPI.Models.Mediator", "Reviewee")
-                        .WithMany()
-                        .HasForeignKey("RevieweeId")
+                        .WithOne()
+                        .HasForeignKey("GraduationProjectAPI.Models.Reviews.MediatorReview", "RevieweeId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("GraduationProjectAPI.Models.Mediator", "Reviewer")
-                        .WithMany()
-                        .HasForeignKey("ReviewerId")
+                        .WithOne()
+                        .HasForeignKey("GraduationProjectAPI.Models.Reviews.MediatorReview", "ReviewerId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 

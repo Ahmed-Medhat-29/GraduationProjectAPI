@@ -39,9 +39,10 @@ namespace GraduationProjectAPI.Models
 		public bool Completed { get; set; }
 
 		[Required]
-		public byte[] NationalIdImage { get; set; }
-
 		public byte[] ProfileImage { get; set; }
+
+		[Required]
+		public byte[] NationalIdImage { get; set; }
 
 		public GeoLocation GeoLocation { get; set; }
 		public int GeoLocationId { get; set; }

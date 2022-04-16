@@ -1,4 +1,4 @@
-﻿namespace GraduationProjectAPI.Utilities.NotificationsManagement
+﻿namespace GraduationProjectAPI.DTOs
 {
 	public class NotificationDto
 	{

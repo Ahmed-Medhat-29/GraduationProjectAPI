@@ -1,12 +1,11 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using AutoMapper;
 using GraduationProjectAPI.Data;
+using GraduationProjectAPI.DTOs;
 using GraduationProjectAPI.DTOs.Case;
 using GraduationProjectAPI.Models;
-using GraduationProjectAPI.Models.CaseProperties;
 using GraduationProjectAPI.Models.Reviews;
 using GraduationProjectAPI.Utilities.CustomApiResponses;
 using GraduationProjectAPI.Utilities.StaticStrings;
@@ -70,13 +69,13 @@ namespace GraduationProjectAPI.Controllers
 
 		[Authorize]
 		[HttpPost("[action]")]
-		public async Task<IActionResult> Reviews([FromForm] ReviewDto dto)
+		public async Task<IActionResult> Review([FromForm] ReviewDto dto)
 		{
-			if (!await _context.Cases.AnyAsync(c => c.Id == dto.CaseId))
+			if (!await _context.Cases.AnyAsync(c => c.Id == dto.RevieweeId))
 				return new BadRequest("Case was not found");
 
 			var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-			if (await _context.CaseReviews.AnyAsync(c => c.CaseId == dto.CaseId && c.MediatorId == userId))
+			if (await _context.CaseReviews.AnyAsync(c => c.CaseId == dto.RevieweeId && c.MediatorId == userId))
 				return new BadRequest("Case has been reviewd already");
 
 			var review = _mapper.Map(dto, new CaseReview(userId));

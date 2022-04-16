@@ -1,9 +1,5 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using System.Threading.Tasks;
-using GraduationProjectAPI.Models;
-using GraduationProjectAPI.Utilities.CustomAttributes;
-using Microsoft.AspNetCore.Http;
 
 namespace GraduationProjectAPI.DTOs.Mediator
 {

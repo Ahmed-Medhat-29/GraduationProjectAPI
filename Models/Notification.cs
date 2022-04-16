@@ -8,7 +8,7 @@ namespace GraduationProjectAPI.Models
 
 		[Required, MaxLength(4000)]
 		public string Title { get; set; }
-		
+
 		[Required, MaxLength(4000)]
 		public string Body { get; set; }
 

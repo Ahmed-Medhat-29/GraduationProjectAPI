@@ -1,6 +1,5 @@
 using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
 using GraduationProjectAPI.Data;
 using GraduationProjectAPI.Utilities;
 using GraduationProjectAPI.Utilities.AuthenticationConfigurations;
@@ -62,16 +61,16 @@ namespace GraduationProjectAPI
 		{
 			app.UseDeveloperExceptionPage();
 			app.UseStaticFiles();
-			app.Use(async (context, next) =>
-			{
-				new Task(() =>
-				{
-					if (context.Request.Method == "POST" && !string.IsNullOrWhiteSpace(context.Request.ContentType))
-						HttpRequestLogger.Log(context.Request);
-				}).Start();
+			//app.Use(async (context, next) =>
+			//{
+			//	new Task(() =>
+			//	{
+			//		if (context.Request.Method == "POST" && !string.IsNullOrWhiteSpace(context.Request.ContentType))
+			//			HttpRequestLogger.Log(context.Request);
+			//	}).Start();
 
-				await next.Invoke();
-			});
+			//	await next.Invoke();
+			//});
 
 			app.UseRouting();
 			app.UseAuthentication();
