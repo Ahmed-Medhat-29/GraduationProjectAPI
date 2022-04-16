@@ -91,5 +91,36 @@ namespace GraduationProjectAPI.Controllers
 				.Include(m => m.Status)
 				.ToArrayAsync());
 		}
+
+		[HttpPost("[action]/{id}")]
+		public async Task<IActionResult> AcceptCase(uint id)
+		{
+			var @case = await _context.Cases.FirstOrDefaultAsync(m => m.Id == id);
+			if (@case == null)
+				return new BadRequest($"Case with id: {id} could not be found");
+
+			@case.StatusId = await _context.Status
+				.Where(s => s.Name == Status.Accepted)
+				.Select(s => s.Id)
+				.FirstAsync();
+
+			await _context.SaveChangesAsync();
+			return new Success();
+		}
+
+		[HttpPost("[action]")]
+		public async Task<IActionResult> AcceptCases()
+		{
+			var cases = await _context.Cases.ToArrayAsync();
+			if (cases == null || cases.Count() <= 0)
+				return new Success();
+
+			var acceptedStatusId = await _context.Status.Where(s => s.Name == Status.Accepted).Select(s => s.Id).FirstAsync();
+			foreach (var @case in cases)
+				@case.StatusId = acceptedStatusId;
+
+			await _context.SaveChangesAsync();
+			return new Success();
+		}
 	}
 }

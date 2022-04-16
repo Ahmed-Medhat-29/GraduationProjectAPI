@@ -61,6 +61,7 @@ namespace GraduationProjectAPI.Models
 		public Locale Locale { get; set; }
 		public byte LocaleId { get; set; }
 
+		public ICollection<Notification> Notifications { get; set; }
 		public ICollection<Case> CasesAdded { get; set; }
 	}
 }

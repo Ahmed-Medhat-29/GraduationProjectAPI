@@ -6,11 +6,11 @@ namespace GraduationProjectAPI.Utilities.NotificationsManagement
 {
 	public class NotificationHandler
 	{
-		private readonly Notification _notification;
+		private readonly NotificationDto _notification;
 
 		public NotificationHandler(string title, string body)
 		{
-			_notification = new Notification(title, body);
+			_notification = new NotificationDto(title, body);
 		}
 
 		public async Task SendAsync(string token)

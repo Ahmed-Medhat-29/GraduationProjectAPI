@@ -20,22 +20,17 @@ namespace GraduationProjectAPI.DTOs.Mediator
 		[MaxLength(4000), MinLength(3)]
 		public string Bio { get; set; }
 
-		[Required, ImageFile]
-		public IFormFile ProfileImage { get; set; }
-
 		[Range(1, int.MaxValue)]
 		public int RegionId { get; set; }
 
-		public async Task UpdateMediatorAsync(Models.Mediator mediator)
+		public void UpdateMediator(Models.Mediator mediator)
 		{
-			var imageTask = MediatorImagesHandler.SetProfileImageAsync(mediator, ProfileImage);
 			mediator.Job = Job ?? mediator.Job;
 			mediator.Address = Address ?? mediator.Address;
 			mediator.BirthDate = BirthDate;
 			mediator.Bio = Bio ?? mediator.Bio;
 			mediator.RegionId = RegionId;
 			mediator.Completed = true;
-			await imageTask;
 		}
 	}
 }

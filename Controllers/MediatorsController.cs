@@ -1,12 +1,15 @@
-﻿using System.Device.Location;
+﻿using System;
+using System.Device.Location;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using AutoMapper;
 using GraduationProjectAPI.Data;
 using GraduationProjectAPI.DTOs;
+using GraduationProjectAPI.DTOs.Case;
 using GraduationProjectAPI.DTOs.Mediator;
 using GraduationProjectAPI.Models;
+using GraduationProjectAPI.Models.CaseProperties;
 using GraduationProjectAPI.Models.Location;
 using GraduationProjectAPI.Utilities.AuthenticationConfigurations;
 using GraduationProjectAPI.Utilities.CustomApiResponses;
@@ -31,6 +34,38 @@ namespace GraduationProjectAPI.Controllers
 			_mapper = mapper;
 		}
 
+		[HttpGet("[action]")]
+		[Authorize]
+		public async Task<IActionResult> Home()
+		{
+			var cases = await _context.Cases
+				.Where(c => c.Status.Name == Status.Accepted)
+				.Select(c => new CaseElementDto
+				{
+					Id = c.Id,
+					Name = c.Name,
+					Title = c.Title,
+					Priority = c.Priority.Name,
+					Age = ((short)(DateTime.Now - c.DateRequested).TotalDays),
+					FundRaised = 4000,
+				}).ToArrayAsync();
+
+			var images = await _context.Images
+				.Where(i => cases.Select(c => c.Id).Contains(i.CaseId))
+				.Select(i => new Image
+				{
+					Id = i.Id,
+					CaseId = i.CaseId
+				})
+				.ToArrayAsync();
+
+			var imageUrl = string.Concat(Request.Scheme, "://", Request.Host, Request.PathBase.ToString().ToLower(), "/api/cases/image/");
+			foreach (var @case in cases)
+				@case.ImagesUrl = images.Where(i => i.CaseId == @case.Id).Select(i => imageUrl + i.Id).ToArray();
+
+			return new Success(cases);
+		}
+
 		[HttpPost("[action]")]
 		public async Task<IActionResult> Register([FromForm] RegisterDto dto)
 		{
@@ -39,10 +74,9 @@ namespace GraduationProjectAPI.Controllers
 				return errors;
 
 			var mediator = _mapper.Map<Mediator>(dto);
-			var imageTask = MediatorImagesHandler.SetNationalIdImageAsync(mediator, dto.NatoinalIdImage);
+			await dto.SetImagesAsync(mediator);
 			mediator.StatusId = await GetStatusIdAsync(Status.Pending);
 			mediator.LocaleId = await GetLocaleIdAsync("en");
-			await imageTask;
 			await _context.Mediators.AddAsync(mediator);
 			await _context.SaveChangesAsync();
 			await SendNotificationForNewMediatorAsync(mediator);
@@ -111,7 +145,7 @@ namespace GraduationProjectAPI.Controllers
 		{
 			var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 			var mediator = await _context.Mediators.FirstAsync(m => m.Id == userId);
-			await dto.UpdateMediatorAsync(mediator);
+			dto.UpdateMediator(mediator);
 			await _context.SaveChangesAsync();
 			return new Success();
 		}
@@ -242,13 +276,29 @@ namespace GraduationProjectAPI.Controllers
 				.Select(l => l.Id)
 				.Take(5);
 
-			var tokens = await _context.Mediators
+			var mediatorsToBeNotified = await _context.Mediators
 				.Where(m => closestLocationsId.Contains(m.GeoLocationId))
-				.Select(m => m.FirebaseToken)
+				.Select(m => new Mediator
+				{
+					Id = m.Id,
+					FirebaseToken = m.FirebaseToken
+				})
 				.ToArrayAsync();
 
 			var handler = new NotificationHandler("New Mediator", "Please check the new mediator");
-			await handler.SendAsync(tokens);
+			await handler.SendAsync(mediatorsToBeNotified.Select(m => m.FirebaseToken).ToArray());
+
+			foreach (var med in mediatorsToBeNotified)
+			{
+				await _context.Notifications.AddAsync(new Notification()
+				{
+					Title = "New Mediator",
+					Body = "Please check the new mediator",
+					MediatorId = med.Id
+				});
+			}
+
+			await _context.SaveChangesAsync();
 		}
 	}
 }

@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using GraduationProjectAPI.Data;
 using GraduationProjectAPI.DTOs;
+using GraduationProjectAPI.DTOs.Case;
 using GraduationProjectAPI.Utilities.CustomApiResponses;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -64,6 +65,22 @@ namespace GraduationProjectAPI.Controllers
 		public async Task<IActionResult> SocialStatus()
 		{
 			return new Success(await _context.SocialStatus.AsNoTracking().ToArrayAsync());
+		}
+
+		[HttpGet("case-properties")]
+		public async Task<IActionResult> CaseProperties()
+		{
+			var properties = new CaseProperties
+			{
+				Genders = await _context.Genders.AsNoTracking().ToArrayAsync(),
+				SocialStatus = await _context.SocialStatus.AsNoTracking().ToArrayAsync(),
+				Relationships = await _context.Relationships.AsNoTracking().ToArrayAsync(),
+				Categories = await _context.Categories.AsNoTracking().ToArrayAsync(),
+				Periods = await _context.Periods.AsNoTracking().ToArrayAsync(),
+				Priorities = await _context.Priorities.AsNoTracking().ToArrayAsync()
+			};
+
+			return new Success(properties);
 		}
 	}
 }

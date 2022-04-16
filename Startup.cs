@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using System.Threading.Tasks;
 using GraduationProjectAPI.Data;
 using GraduationProjectAPI.Utilities;
 using GraduationProjectAPI.Utilities.AuthenticationConfigurations;
@@ -9,10 +10,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace GraduationProjectAPI
 {
@@ -58,29 +56,22 @@ namespace GraduationProjectAPI
 
 			services.AddAutoMapper(options => options.AddProfile<MapperProfile>());
 			services.AddScoped<IAuthenticationTokenGenerator, JwtGenerator>();
-
-			//services.AddTransient<IConfigureOptions<SwaggerGenOptions>, SwaggerOptions>();
-			//services.AddSwaggerGen();
 		}
 
-		public void Configure(IApplicationBuilder app, IHostEnvironment env)
+		public void Configure(IApplicationBuilder app)
 		{
 			app.UseDeveloperExceptionPage();
 			app.UseStaticFiles();
 			app.Use(async (context, next) =>
 			{
-				if (context.Request.Method == "POST")
-					HttpRequestLogger.Log(context.Request);
+				new Task(() =>
+				{
+					if (context.Request.Method == "POST" && !string.IsNullOrWhiteSpace(context.Request.ContentType))
+						HttpRequestLogger.Log(context.Request);
+				}).Start();
 
 				await next.Invoke();
 			});
-
-			//app.UseSwagger();
-			//app.UseSwaggerUI(c =>
-			//{
-			//	c.SwaggerEndpoint("swagger/v1/swagger.json", "Graduation Project API");
-			//	c.RoutePrefix = string.Empty;
-			//});
 
 			app.UseRouting();
 			app.UseAuthentication();

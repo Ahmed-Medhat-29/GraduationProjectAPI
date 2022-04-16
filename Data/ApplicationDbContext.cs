@@ -10,6 +10,7 @@ namespace GraduationProjectAPI.Data
 	public class ApplicationDbContext : DbContext
 	{
 		public DbSet<Category> Categories { get; set; }
+		public DbSet<Notification> Notifications { get; set; }
 		public DbSet<Priority> Priorities { get; set; }
 		public DbSet<Period> Periods { get; set; }
 		public DbSet<Relationship> Relationships { get; set; }

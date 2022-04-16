@@ -1,11 +1,11 @@
 ﻿namespace GraduationProjectAPI.Utilities.NotificationsManagement
 {
-	public class Notification
+	public class NotificationDto
 	{
 		public string Title { get; set; }
 		public string Body { get; set; }
 
-		public Notification(string title, string body)
+		public NotificationDto(string title, string body)
 		{
 			Title = title;
 			Body = body;

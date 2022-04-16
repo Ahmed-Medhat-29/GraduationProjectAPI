@@ -6,6 +6,7 @@ using AutoMapper;
 using GraduationProjectAPI.Data;
 using GraduationProjectAPI.DTOs.Case;
 using GraduationProjectAPI.Models;
+using GraduationProjectAPI.Models.CaseProperties;
 using GraduationProjectAPI.Models.Reviews;
 using GraduationProjectAPI.Utilities.CustomApiResponses;
 using GraduationProjectAPI.Utilities.StaticStrings;
@@ -29,42 +30,16 @@ namespace GraduationProjectAPI.Controllers
 		}
 
 		[Authorize]
-		[HttpGet("[action]")]
-		public async Task<IActionResult> Add()
+		[HttpGet("[action]/{id:min(1)}")]
+		public async Task<IActionResult> Image(int id)
 		{
-			var properties = new CaseProperties
-			{
-				Genders = await _context.Genders.AsNoTracking().ToArrayAsync(),
-				SocialStatus = await _context.SocialStatus.AsNoTracking().ToArrayAsync(),
-				Relationships = await _context.Relationships.AsNoTracking().ToArrayAsync(),
-				Categories = await _context.Categories.AsNoTracking().ToArrayAsync(),
-				Periods = await _context.Periods.AsNoTracking().ToArrayAsync(),
-				Priorities = await _context.Priorities.AsNoTracking().ToArrayAsync()
-			};
+			var image = await _context.Images
+				.Where(i => i.Id == id)
+				.Select(m => m.Data)
+				.FirstOrDefaultAsync();
 
-			return new Success(properties);
+			return image == null ? NotFound(null) : File(image, "image/jpeg");
 		}
-
-
-		//[HttpGet]
-		//[Authorize]
-		//public async Task<IActionResult> GetCases()
-		//{
-		//	var cases = await _context.Cases
-		//		.Where(c => c.Status.Name == Status.Accepted)
-		//		.Select(c => new CaseElementDto
-		//		{
-		//			Id = c.Id,
-		//			Name = c.Name,
-		//			Title = c.Title,
-		//			Priority = c.Priority.Name,
-		//			Age = ((short)(DateTime.Now - c.DateRequested).TotalDays),
-		//			FundRaised = 4000,
-		//			ImageUrl = string.Concat(Request.Scheme, "://", Request.Host, Request.PathBase.ToString().ToLower(), "/api/cases/image")
-		//		}).ToArrayAsync();
-
-		//	return new Success(cases);
-		//}
 
 		[HttpPost]
 		[Authorize]

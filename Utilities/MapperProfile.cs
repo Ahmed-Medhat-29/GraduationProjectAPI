@@ -12,8 +12,11 @@ namespace GraduationProjectAPI.Utilities
 	{
 		public MapperProfile()
 		{
+			CreateMap<RegisterDto, Mediator>()
+				.ForMember(d => d.NationalIdImage, act => act.Ignore())
+				.ForMember(d => d.ProfileImage, act => act.Ignore());
+
 			CreateMap<GeoLocationDto, GeoLocation>();
-			CreateMap<RegisterDto, Mediator>();
 			CreateMap<NewCaseDto, Case>().ForMember(d => d.NationalIdImage, act => act.Ignore());
 			CreateMap<ReviewDto, CaseReview>();
 		}
