@@ -11,6 +11,7 @@ namespace GraduationProjectAPI.Data
 	{
 		public DbSet<Category> Categories { get; set; }
 		public DbSet<Notification> Notifications { get; set; }
+		public DbSet<Models.NotificationType> NotificationTypes { get; set; }
 		public DbSet<Priority> Priorities { get; set; }
 		public DbSet<Period> Periods { get; set; }
 		public DbSet<Relationship> Relationships { get; set; }

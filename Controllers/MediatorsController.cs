@@ -8,17 +8,19 @@ using GraduationProjectAPI.Data;
 using GraduationProjectAPI.DTOs;
 using GraduationProjectAPI.DTOs.Case;
 using GraduationProjectAPI.DTOs.Mediator;
+using GraduationProjectAPI.Enums;
 using GraduationProjectAPI.Models;
 using GraduationProjectAPI.Models.CaseProperties;
 using GraduationProjectAPI.Models.Location;
 using GraduationProjectAPI.Models.Reviews;
+using GraduationProjectAPI.Models.Shared;
+using GraduationProjectAPI.Utilities;
 using GraduationProjectAPI.Utilities.AuthenticationConfigurations;
 using GraduationProjectAPI.Utilities.CustomApiResponses;
-using GraduationProjectAPI.Utilities.NotificationsManagement;
-using GraduationProjectAPI.Utilities.StaticStrings;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace GraduationProjectAPI.Controllers
 {
@@ -29,18 +31,20 @@ namespace GraduationProjectAPI.Controllers
 	{
 		private readonly ApplicationDbContext _context;
 		private readonly IMapper _mapper;
+		private readonly IServiceScopeFactory _scopeFactory;
 
-		public MediatorsController(ApplicationDbContext context, IMapper mapper)
+		public MediatorsController(ApplicationDbContext context, IMapper mapper, IServiceScopeFactory scopeFactory)
 		{
 			_context = context;
 			_mapper = mapper;
+			_scopeFactory = scopeFactory;
 		}
 
 		[HttpGet("[action]")]
 		public async Task<IActionResult> Home()
 		{
 			var cases = await _context.Cases
-				.Where(c => c.Status.Name == Status.Accepted)
+				.Where(c => c.Status.Name == StatusType.Accepted.ToString())
 				.Select(c => new CaseElementDto
 				{
 					Id = c.Id,
@@ -71,17 +75,16 @@ namespace GraduationProjectAPI.Controllers
 		[HttpPost("[action]")]
 		public async Task<IActionResult> Register([FromForm] RegisterDto dto)
 		{
-			var errors = await ValidateMediatorAsync(dto);
-			if (errors != null)
-				return errors;
+			var result = await ValidateMediatorAsync(dto.PhoneNumber, dto.NationalId);
+			if (result != null)
+				return result;
 
 			var mediator = _mapper.Map<Mediator>(dto);
-			await dto.SetImagesAsync(mediator);
-			mediator.StatusId = await GetStatusIdAsync(Status.Pending);
-			mediator.LocaleId = await GetLocaleIdAsync("en");
+			mediator.StatusId = (byte)StatusType.Pending;
+			mediator.LocaleId = (byte)LocaleType.EN;
 			await _context.Mediators.AddAsync(mediator);
 			await _context.SaveChangesAsync();
-			await SendNotificationForNewMediatorAsync(mediator);
+			_ = SendNotificationForNewMediatorAsync(mediator);
 			return new Success();
 		}
 
@@ -95,12 +98,12 @@ namespace GraduationProjectAPI.Controllers
 				{
 					Id = m.Id,
 					FirebaseToken = m.FirebaseToken,
-					Status = new Models.Shared.Status { Name = m.Status.Name }
+					Status = new Status { Name = m.Status.Name }
 				}).FirstOrDefaultAsync();
 
-			var errors = ValidateStatus(mediator);
-			if (errors != null)
-				return errors;
+			var error = ValidateStatus(mediator);
+			if (error != null)
+				return error;
 
 			if (mediator.FirebaseToken != dto.FirebaseToken)
 			{
@@ -201,7 +204,7 @@ namespace GraduationProjectAPI.Controllers
 			if (dto.RevieweeId == userId)
 				return new BadRequest("You can't review yurself");
 
-			var isMediatorExists = await _context.Mediators.AnyAsync(m => m.Id == dto.RevieweeId && m.Status.Name == Status.Pending);
+			var isMediatorExists = await _context.Mediators.AnyAsync(m => m.Id == dto.RevieweeId && m.Status.Name == StatusType.Pending.ToString());
 			if (!isMediatorExists)
 				return new BadRequest("No pending mediator with such id found");
 
@@ -227,13 +230,14 @@ namespace GraduationProjectAPI.Controllers
 					.FirstOrDefaultAsync();
 
 				_context.Mediators.Attach(mediator);
-				mediator.StatusId = await GetStatusIdAsync(Status.Submitted);
+				mediator.StatusId = (byte)StatusType.Submitted;
 				await _context.SaveChangesAsync();
 			}
 
 			return new Success();
 		}
 
+		[AllowAnonymous]
 		[HttpPost("[action]")]
 		public async Task<IActionResult> ValidateNumber([FromForm] PhoneNumberDto numberDTO)
 		{
@@ -243,38 +247,22 @@ namespace GraduationProjectAPI.Controllers
 
 		// ********************** Private methods **********************************
 
-		private async Task<BadRequest> ValidateMediatorAsync(RegisterDto dto)
+		private async Task<BadRequest> ValidateMediatorAsync(string phoneNumber, string nationalId)
 		{
 			var mediator = await _context.Mediators
 				.Select(m => new Mediator
 				{
 					NationalId = m.NationalId,
 					PhoneNumber = m.PhoneNumber
-				}).FirstOrDefaultAsync(m => m.PhoneNumber == dto.PhoneNumber || m.NationalId == dto.NationalId);
+				}).FirstOrDefaultAsync(m => m.PhoneNumber == phoneNumber || m.NationalId == nationalId);
 
 			if (mediator == null)
 				return null;
 
-			if (mediator.PhoneNumber == dto.PhoneNumber)
-				return new BadRequest(nameof(dto.PhoneNumber), "Phone number already exists");
+			if (mediator.PhoneNumber == phoneNumber)
+				return new BadRequest(nameof(phoneNumber), "Phone number already exists");
 			else
-				return new BadRequest(nameof(dto.NationalId), "National id already exists");
-		}
-
-		private async Task<byte> GetStatusIdAsync(string status)
-		{
-			return await _context.Status
-				.Where(s => s.Name == status)
-				.Select(s => s.Id)
-				.FirstAsync();
-		}
-
-		private async Task<byte> GetLocaleIdAsync(string locale)
-		{
-			return await _context.Locales
-				.Where(s => s.Name == locale)
-				.Select(s => s.Id)
-				.FirstAsync();
+				return new BadRequest(nameof(nationalId), "National id already exists");
 		}
 
 		private BadRequest ValidateStatus(Mediator mediator)
@@ -282,10 +270,10 @@ namespace GraduationProjectAPI.Controllers
 			if (mediator == null)
 				return new BadRequest("Please register first");
 
-			if (mediator.Status.Name == Status.Pending || mediator.Status.Name == Status.Submitted)
+			if (mediator.StatusId == (byte)StatusType.Pending || mediator.StatusId == (byte)StatusType.Submitted)
 				return new BadRequest(nameof(mediator.Status.Name), "Your registeration request is pending...");
 
-			if (mediator.Status.Name == Status.Rejected)
+			if (mediator.StatusId == (byte)StatusType.Rejected)
 				return new BadRequest(nameof(mediator.Status.Name), "Your registeration request has been rejected");
 
 			return null;
@@ -301,14 +289,16 @@ namespace GraduationProjectAPI.Controllers
 
 		private async Task SendNotificationForNewMediatorAsync(Mediator mediator)
 		{
-			var geoLocations = await _context.Mediators
-							.Where(m => m.Status.Name == Status.Accepted)
-							.Select(m => new GeoLocation
-							{
-								Id = m.GeoLocation.Id,
-								Latitude = m.GeoLocation.Latitude,
-								Longitude = m.GeoLocation.Longitude
-							}).ToArrayAsync();
+			using var scope = _scopeFactory.CreateScope();
+			var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+			var geoLocations = await context.Mediators
+						.Where(m => m.Status.Name == StatusType.Accepted.ToString())
+						.Select(m => new GeoLocation
+						{
+							Id = m.GeoLocation.Id,
+							Latitude = m.GeoLocation.Latitude,
+							Longitude = m.GeoLocation.Longitude
+						}).ToArrayAsync();
 
 			var mediatorCoordinate = new GeoCoordinate(mediator.GeoLocation.Latitude, mediator.GeoLocation.Longitude);
 			var closestLocationsId = geoLocations
@@ -316,7 +306,7 @@ namespace GraduationProjectAPI.Controllers
 				.Select(l => l.Id)
 				.Take(5);
 
-			var mediatorsToBeNotified = await _context.Mediators
+			var mediatorsToBeNotified = await context.Mediators
 				.Where(m => closestLocationsId.Contains(m.GeoLocationId))
 				.Select(m => new Mediator
 				{
@@ -326,11 +316,11 @@ namespace GraduationProjectAPI.Controllers
 				.ToArrayAsync();
 
 			var handler = new NotificationHandler("New Mediator", "Please check the new mediator");
-			await handler.SendAsync(mediatorsToBeNotified.Select(m => m.FirebaseToken).ToArray());
+			await handler.SendAsync(mediatorsToBeNotified.Select(m => m.FirebaseToken));
 
 			foreach (var med in mediatorsToBeNotified)
 			{
-				await _context.Notifications.AddAsync(new Notification()
+				await context.Notifications.AddAsync(new Notification()
 				{
 					Title = "New Mediator",
 					Body = "Please check the new mediator",
@@ -338,7 +328,7 @@ namespace GraduationProjectAPI.Controllers
 				});
 			}
 
-			await _context.SaveChangesAsync();
+			await context.SaveChangesAsync();
 		}
 	}
 }

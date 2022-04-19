@@ -1,9 +1,10 @@
-﻿using System.Net.Http;
+﻿using System.Collections.Generic;
+using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 using GraduationProjectAPI.DTOs;
 
-namespace GraduationProjectAPI.Utilities.NotificationsManagement
+namespace GraduationProjectAPI.Utilities
 {
 	public class NotificationHandler
 	{
@@ -17,19 +18,17 @@ namespace GraduationProjectAPI.Utilities.NotificationsManagement
 		public async Task SendAsync(string token)
 		{
 			var content = InitContent(token);
-			using (var client = CreateHttpClient())
-				await MakeRequestAsync(client, content);
+			using var client = CreateHttpClient();
+			await MakeRequestAsync(client, content);
 		}
 
-		public async Task SendAsync(string[] tokens)
+		public async Task SendAsync(IEnumerable<string> tokens)
 		{
-			using (var client = CreateHttpClient())
+			using var client = CreateHttpClient();
+			foreach (var token in tokens)
 			{
-				foreach (var token in tokens)
-				{
-					var content = InitContent(token);
-					await MakeRequestAsync(client, content);
-				}
+				var content = InitContent(token);
+				await MakeRequestAsync(client, content);
 			}
 		}
 

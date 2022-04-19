@@ -1,6 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.Threading.Tasks;
-using GraduationProjectAPI.Models;
 using GraduationProjectAPI.Utilities.CustomAttributes;
 using Microsoft.AspNetCore.Http;
 
@@ -26,7 +24,7 @@ namespace GraduationProjectAPI.DTOs.Mediator
 		[Required, ImageFile(MaxSize = 1024 * 1024)]
 		public IFormFile ProfileImage { get; set; }
 
-		[Required, ImageFile(MaxSize = 1024 * 1024)] // 1MB
+		[Required, ImageFile(MaxSize = 1024 * 1024)]
 		public IFormFile NationalIdImage { get; set; }
 
 		[Range(1, 2)]
@@ -34,11 +32,5 @@ namespace GraduationProjectAPI.DTOs.Mediator
 
 		[Range(1, 4)]
 		public byte SocialStatusId { get; set; }
-
-		public async Task SetImagesAsync(Models.Mediator mediator)
-		{
-			await MediatorImagesHandler.SetProfileImageAsync(mediator, ProfileImage);
-			await MediatorImagesHandler.SetNationalIdImageAsync(mediator, NationalIdImage);
-		}
 	}
 }

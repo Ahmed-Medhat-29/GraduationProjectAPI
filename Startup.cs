@@ -55,6 +55,8 @@ namespace GraduationProjectAPI
 
 			services.AddAutoMapper(options => options.AddProfile<MapperProfile>());
 			services.AddScoped<IAuthenticationTokenGenerator, JwtGenerator>();
+
+			services.AddMemoryCache();
 		}
 
 		public void Configure(IApplicationBuilder app)

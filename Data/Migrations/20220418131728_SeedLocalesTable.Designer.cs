@@ -4,14 +4,16 @@ using GraduationProjectAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace GraduationProjectAPI.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220418131728_SeedLocalesTable")]
+    partial class SeedLocalesTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -199,23 +201,6 @@ namespace GraduationProjectAPI.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Periods");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = (byte)1,
-                            Name = "One Time"
-                        },
-                        new
-                        {
-                            Id = (byte)2,
-                            Name = "Weekly"
-                        },
-                        new
-                        {
-                            Id = (byte)3,
-                            Name = "Monthly"
-                        });
                 });
 
             modelBuilder.Entity("GraduationProjectAPI.Models.CaseProperties.Priority", b =>

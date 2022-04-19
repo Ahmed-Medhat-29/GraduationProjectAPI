@@ -5,10 +5,10 @@ using AutoMapper;
 using GraduationProjectAPI.Data;
 using GraduationProjectAPI.DTOs;
 using GraduationProjectAPI.DTOs.Case;
+using GraduationProjectAPI.Enums;
 using GraduationProjectAPI.Models;
 using GraduationProjectAPI.Models.Reviews;
 using GraduationProjectAPI.Utilities.CustomApiResponses;
-using GraduationProjectAPI.Utilities.StaticStrings;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -49,19 +49,13 @@ namespace GraduationProjectAPI.Controllers
 				return result;
 
 			var pendingStatusId = _context.Status
-				.Where(s => s.Name == Status.Pending)
+				.Where(s => s.Name == StatusType.Pending.ToString())
 				.Select(s => s.Id)
 				.FirstAsync();
 
 			var newCase = _mapper.Map<Case>(dto);
-			var settingImageTask = newCase.SetNationalIdImageAsync(dto.NationalIdImage);
-
-			if (dto.OptionalImages != null)
-				newCase.AddOptionalImages(dto.OptionalImages);
-
 			newCase.MediatorId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 			newCase.StatusId = await pendingStatusId;
-			await settingImageTask;
 			await _context.AddAsync(newCase);
 			await _context.SaveChangesAsync();
 			return new Success();

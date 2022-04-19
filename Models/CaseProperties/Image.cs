@@ -1,6 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.IO;
-using Microsoft.AspNetCore.Http;
 
 namespace GraduationProjectAPI.Models.CaseProperties
 {
@@ -19,13 +17,9 @@ namespace GraduationProjectAPI.Models.CaseProperties
 
 		}
 
-		public Image(IFormFile image)
+		public Image(byte[] imageBytes)
 		{
-			using (var stream = new MemoryStream())
-			{
-				image.CopyTo(stream);
-				Data = stream.ToArray();
-			}
+			Data = imageBytes;
 		}
 	}
 }

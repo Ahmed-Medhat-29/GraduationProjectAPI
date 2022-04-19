@@ -19,6 +19,14 @@ namespace GraduationProjectAPI.Utilities.AuthenticationConfigurations
 			_config = config;
 		}
 
+		public string Generate(string id)
+		{
+			return SetToken(new Claim[]
+			{
+				new Claim(ClaimTypes.NameIdentifier, id)
+			});
+		}
+
 		public string Generate(string id, IDictionary<string, string> data)
 		{
 			var claims = new List<Claim>();
@@ -28,14 +36,6 @@ namespace GraduationProjectAPI.Utilities.AuthenticationConfigurations
 				claims.AddRange(data.Select(d => new Claim(d.Key, d.Value)));
 
 			return SetToken(claims);
-		}
-
-		public string Generate(string id)
-		{
-			return SetToken(new Claim[]
-			{
-				new Claim(ClaimTypes.NameIdentifier, id)
-			});
 		}
 
 		private string SetToken(IEnumerable<Claim> claims)

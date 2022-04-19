@@ -1,8 +1,8 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
 using GraduationProjectAPI.Data;
+using GraduationProjectAPI.Enums;
 using GraduationProjectAPI.Utilities.CustomApiResponses;
-using GraduationProjectAPI.Utilities.StaticStrings;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -48,7 +48,7 @@ namespace GraduationProjectAPI.Controllers
 				return new BadRequest($"Mediator with id: {id} could not be found");
 
 			mediator.StatusId = await _context.Status
-				.Where(s => s.Name == Status.Accepted)
+				.Where(s => s.Name == StatusType.Accepted.ToString())
 				.Select(s => s.Id)
 				.FirstAsync();
 
@@ -63,7 +63,7 @@ namespace GraduationProjectAPI.Controllers
 			if (mediators == null || mediators.Count() <= 0)
 				return new Success();
 
-			var acceptedStatusId = await _context.Status.Where(s => s.Name == Status.Accepted).Select(s => s.Id).FirstAsync();
+			var acceptedStatusId = await _context.Status.Where(s => s.Name == StatusType.Accepted.ToString()).Select(s => s.Id).FirstAsync();
 			foreach (var mediator in mediators)
 				mediator.StatusId = acceptedStatusId;
 
@@ -100,7 +100,7 @@ namespace GraduationProjectAPI.Controllers
 				return new BadRequest($"Case with id: {id} could not be found");
 
 			@case.StatusId = await _context.Status
-				.Where(s => s.Name == Status.Accepted)
+				.Where(s => s.Name == StatusType.Accepted.ToString())
 				.Select(s => s.Id)
 				.FirstAsync();
 
@@ -115,7 +115,7 @@ namespace GraduationProjectAPI.Controllers
 			if (cases == null || cases.Count() <= 0)
 				return new Success();
 
-			var acceptedStatusId = await _context.Status.Where(s => s.Name == Status.Accepted).Select(s => s.Id).FirstAsync();
+			var acceptedStatusId = await _context.Status.Where(s => s.Name == StatusType.Accepted.ToString()).Select(s => s.Id).FirstAsync();
 			foreach (var @case in cases)
 				@case.StatusId = acceptedStatusId;
 

@@ -2,20 +2,21 @@
 using System.Linq;
 using GraduationProjectAPI.Enums;
 using GraduationProjectAPI.Models.CaseProperties;
+using GraduationProjectAPI.Utilities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace GraduationProjectAPI.Data.EntitiesConfigurations
 {
-	public class PriorityConfigs : IEntityTypeConfiguration<Priority>
+	public class PeriodConfigs : IEntityTypeConfiguration<Period>
 	{
-		public void Configure(EntityTypeBuilder<Priority> builder)
+		public void Configure(EntityTypeBuilder<Period> builder)
 		{
-			var data = Enum.GetValues<PriorityType>()
-				.Select(e => new Priority
+			var data = Enum.GetValues<PeriodType>()
+				.Select(e => new Period
 				{
 					Id = (byte)e,
-					Name = e.ToString()
+					Name = e.ToEnumString()
 				});
 
 			builder.HasData(data);

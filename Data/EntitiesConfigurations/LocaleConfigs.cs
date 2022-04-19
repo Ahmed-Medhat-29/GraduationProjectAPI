@@ -1,18 +1,18 @@
 ﻿using System;
 using System.Linq;
 using GraduationProjectAPI.Enums;
-using GraduationProjectAPI.Models.CaseProperties;
+using GraduationProjectAPI.Models.Shared;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace GraduationProjectAPI.Data.EntitiesConfigurations
 {
-	public class PriorityConfigs : IEntityTypeConfiguration<Priority>
+	public class LocaleConfigs : IEntityTypeConfiguration<Locale>
 	{
-		public void Configure(EntityTypeBuilder<Priority> builder)
+		public void Configure(EntityTypeBuilder<Locale> builder)
 		{
-			var data = Enum.GetValues<PriorityType>()
-				.Select(e => new Priority
+			var data = Enum.GetValues<LocaleType>()
+				.Select(e => new Locale
 				{
 					Id = (byte)e,
 					Name = e.ToString()
