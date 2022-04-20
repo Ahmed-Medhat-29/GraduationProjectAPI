@@ -18,7 +18,7 @@ namespace GraduationProjectAPI.Utilities.CustomAttributes
 				return true;
 
 			var file = value as IFormFile ?? throw new InvalidCastException("Object must be of type IFormFile");
-			if (!ImageExtensions.Extentions.Contains(Path.GetExtension(file.FileName.ToLower())))
+			if (!ValidImage.Extentions.Contains(Path.GetExtension(file.FileName.ToLower())))
 			{
 				ErrorMessage = "Image is not valid";
 				return false;

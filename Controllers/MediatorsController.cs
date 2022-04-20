@@ -2,6 +2,7 @@
 using System.Device.Location;
 using System.Linq;
 using System.Security.Claims;
+using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
 using GraduationProjectAPI.Data;
@@ -20,6 +21,7 @@ using GraduationProjectAPI.Utilities.CustomApiResponses;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace GraduationProjectAPI.Controllers
@@ -31,20 +33,22 @@ namespace GraduationProjectAPI.Controllers
 	{
 		private readonly ApplicationDbContext _context;
 		private readonly IMapper _mapper;
-		private readonly IServiceScopeFactory _scopeFactory;
+		private readonly IMemoryCache _memoryCache;
+		private const string _profilePictureUrl = "/api/mediators/profile-image/";
+		private const string _nationalIdImageUrl = "/api/mediators/nationalid-image/";
 
-		public MediatorsController(ApplicationDbContext context, IMapper mapper, IServiceScopeFactory scopeFactory)
+		public MediatorsController(ApplicationDbContext context, IMapper mapper, IMemoryCache memoryCache)
 		{
 			_context = context;
 			_mapper = mapper;
-			_scopeFactory = scopeFactory;
+			_memoryCache = memoryCache;
 		}
 
 		[HttpGet("[action]")]
 		public async Task<IActionResult> Home()
 		{
 			var cases = await _context.Cases
-				.Where(c => c.Status.Name == StatusType.Accepted.ToString())
+				.Where(c => c.StatusId == (byte)StatusType.Accepted)
 				.Select(c => new CaseElementDto
 				{
 					Id = c.Id,
@@ -64,16 +68,16 @@ namespace GraduationProjectAPI.Controllers
 				})
 				.ToArrayAsync();
 
-			var imageUrl = string.Concat(Request.Scheme, "://", Request.Host, Request.PathBase.ToString().ToLower(), "/api/cases/image/");
+			var imageUrl = RequestPath().Append("/api/cases/image/");
 			foreach (var @case in cases)
-				@case.ImagesUrl = images.Where(i => i.CaseId == @case.Id).Select(i => imageUrl + i.Id).ToArray();
+				@case.ImagesUrl = images.Where(i => i.CaseId == @case.Id).Select(i => imageUrl.Append(i.Id).ToString()).ToArray();
 
 			return new Success(cases);
 		}
 
 		[AllowAnonymous]
 		[HttpPost("[action]")]
-		public async Task<IActionResult> Register([FromForm] RegisterDto dto)
+		public async Task<IActionResult> Register([FromForm] RegisterDto dto, [FromServices] IServiceScopeFactory scopeFactory)
 		{
 			var result = await ValidateMediatorAsync(dto.PhoneNumber, dto.NationalId);
 			if (result != null)
@@ -84,7 +88,7 @@ namespace GraduationProjectAPI.Controllers
 			mediator.LocaleId = (byte)LocaleType.EN;
 			await _context.Mediators.AddAsync(mediator);
 			await _context.SaveChangesAsync();
-			_ = SendNotificationForNewMediatorAsync(mediator);
+			_ = SendNotificationForNewMediatorAsync(mediator, scopeFactory);
 			return new Success();
 		}
 
@@ -112,7 +116,6 @@ namespace GraduationProjectAPI.Controllers
 				await _context.SaveChangesAsync();
 			}
 
-			string fullDomain = string.Concat(Request.Scheme, "://", Request.Host, Request.PathBase.ToString().ToLower());
 			var mediatorDto = await _context.Mediators
 				.Where(m => m.Id == mediator.Id)
 				.Select(m => new MediatorDto
@@ -132,14 +135,31 @@ namespace GraduationProjectAPI.Controllers
 					Status = mediator.Status.Name,
 					FirebaseToken = mediator.FirebaseToken,
 					JwtToken = tokenGenerator.Generate(mediator.Id.ToString()),
-					ProfileImageUrl = string.Concat(fullDomain, "/api/mediators/profile/image"),
-					NationalIdImageUrl = string.Concat(fullDomain, "/api/mediators/NationalId/image"),
+					ProfileImageUrl = RequestPath().Append(_profilePictureUrl).ToString() + m.Id,
+					NationalIdImageUrl = RequestPath().Append(_nationalIdImageUrl).ToString() + m.Id,
 					GeoLocation = new GeoLocationDto
 					{
 						Latitude = m.GeoLocation.Latitude,
 						Longitude = m.GeoLocation.Longitude,
 						Details = m.GeoLocation.Details
 					}
+				}).FirstAsync();
+
+			return new Success(mediatorDto);
+		}
+
+		[HttpGet("[action]")]
+		public async Task<IActionResult> Profile()
+		{
+			var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+			var mediatorDto = await _context.Mediators
+				.Where(m => m.Id == userId)
+				.Select(m => new ProfileDto
+				{
+					Name = m.Name,
+					Bio = m.Bio,
+					SocialStatusId = m.SocialStatusId,
+					ImageUrl = RequestPath().Append(_profilePictureUrl).ToString() + m.Id
 				}).FirstAsync();
 
 			return new Success(mediatorDto);
@@ -155,50 +175,100 @@ namespace GraduationProjectAPI.Controllers
 			return new Success();
 		}
 
-		[HttpGet("[action]")]
-		public async Task<IActionResult> Profile()
+		[HttpGet("profile-image/{id:min(1)}")]
+		public async Task<IActionResult> ProfileImage(uint id)
 		{
-			var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-			var mediatorDto = await _context.Mediators
-				.Where(m => m.Id == userId)
-				.Select(m => new ProfileDto
-				{
-					Name = m.Name,
-					Bio = m.Bio,
-					SocialStatusId = m.SocialStatusId,
-					ImageUrl = string.Concat(Request.Scheme, "://", Request.Host, Request.PathBase.ToString().ToLower(), "/api/mediators/profile/image")
-				}).FirstAsync();
+			byte[] image;
+			if (_memoryCache.TryGetValue(nameof(image) + id, out image))
+				return File(image, "image/jpeg");
 
-			return new Success(mediatorDto);
-		}
-
-		[HttpGet("profile/image")]
-		public async Task<IActionResult> ProfileImage()
-		{
-			var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-			var image = await _context.Mediators
-				.Where(m => m.Id == userId)
+			image = await _context.Mediators
+				.Where(m => m.Id == id)
 				.Select(m => m.ProfileImage)
 				.FirstOrDefaultAsync();
 
-			return image == null ? NotFound(null) : File(image, "image/jpeg");
+			if (image == null)
+				return NotFound(null);
+
+			_memoryCache.Set(nameof(image) + id, image, DateTimeOffset.Now.AddMinutes(1));
+			return File(image, "image/jpeg");
 		}
 
-		[Authorize]
-		[HttpGet("nationalid/image")]
-		public async Task<IActionResult> NationalIdImage()
+		[HttpGet("nationalid-image/{id:min(1)}")]
+		public async Task<IActionResult> NationalIdImage(uint id)
 		{
-			var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 			var image = await _context.Mediators
-				.Where(m => m.Id == userId)
+				.Where(m => m.Id == id)
 				.Select(m => m.NationalIdImage)
 				.FirstOrDefaultAsync();
 
 			return image == null ? NotFound(null) : File(image, "image/jpeg");
 		}
 
+		[HttpGet("pending-mediators")]
+		public async Task<IActionResult> PendingMediators()
+		{
+			var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+			var userGeoCoordinate = await _context.Mediators
+				.Where(m => m.Id == userId)
+				.Join(_context.GeoLocations,
+					m => m.GeoLocationId,
+					g => g.Id,
+					(m, g) => new GeoCoordinate(g.Latitude, g.Longitude))
+				.FirstAsync();
+
+			var geoLocations = await _context.Mediators
+				.Where(m => m.StatusId == (byte)StatusType.Pending && !m.ReviewsAboutMe.Any(r => r.ReviewerId == userId))
+				.Select(m => new GeoLocation
+				{
+					Id = m.GeoLocationId,
+					Latitude = m.GeoLocation.Latitude,
+					Longitude = m.GeoLocation.Longitude
+				})
+				.ToArrayAsync();
+
+			var closestLocationsId = geoLocations
+				.OrderBy(l => userGeoCoordinate.GetDistanceTo(new GeoCoordinate(l.Latitude, l.Longitude)))
+				.Select(l => l.Id)
+				.Take(5);
+
+			var pendingMediators = await _context.Mediators
+				.Where(m => closestLocationsId.Contains(m.GeoLocationId))
+				.Select(m => new
+				{
+					Id = m.Id,
+					Name = m.Name,
+					PhoneNumber = m.PhoneNumber,
+					Address = m.Address,
+					ImageUrl = RequestPath().Append(_profilePictureUrl).ToString() + m.Id
+				})
+				.ToArrayAsync();
+
+			return new Success(pendingMediators);
+		}
+
+		[HttpGet("pending-mediators/{id:min(1)}")]
+		public async Task<IActionResult> PendingMediators(int id)
+		{
+			var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+			var mediator = await _context.Mediators
+				.Where(m => m.Id == id && m.StatusId == (byte)StatusType.Pending && !m.ReviewsAboutMe.Any(r => r.ReviewerId == userId))
+				.Select(m => new
+				{
+					Id = m.Id,
+					Name = m.Name,
+					PhoneNumber = m.PhoneNumber,
+					Address = m.Address,
+					BirthDate = m.BirthDate,
+					ImageUrl = RequestPath().Append(_profilePictureUrl).ToString() + m.Id
+				})
+				.FirstOrDefaultAsync();
+
+			return new Success();
+		}
+
 		[HttpPost("[action]")]
-		public async Task<IActionResult> Review([FromForm] ReviewDto dto)
+		public async Task<IActionResult> Reviews([FromForm] ReviewDto dto)
 		{
 			var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 			if (dto.RevieweeId == userId)
@@ -279,6 +349,11 @@ namespace GraduationProjectAPI.Controllers
 			return null;
 		}
 
+		private StringBuilder RequestPath()
+		{
+			return new StringBuilder(Request.Scheme).Append("://").Append(Request.Host).Append(Request.PathBase.ToString());
+		}
+
 		[HttpGet("[action]")]
 		public async Task<IActionResult> Notify([FromForm] string token, [FromForm] string title, [FromForm] string body)
 		{
@@ -287,9 +362,9 @@ namespace GraduationProjectAPI.Controllers
 			return new Success();
 		}
 
-		private async Task SendNotificationForNewMediatorAsync(Mediator mediator)
+		private async Task SendNotificationForNewMediatorAsync(Mediator mediator, IServiceScopeFactory scopeFactory)
 		{
-			using var scope = _scopeFactory.CreateScope();
+			using var scope = scopeFactory.CreateScope();
 			var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 			var geoLocations = await context.Mediators
 						.Where(m => m.Status.Name == StatusType.Accepted.ToString())
@@ -300,9 +375,12 @@ namespace GraduationProjectAPI.Controllers
 							Longitude = m.GeoLocation.Longitude
 						}).ToArrayAsync();
 
-			var mediatorCoordinate = new GeoCoordinate(mediator.GeoLocation.Latitude, mediator.GeoLocation.Longitude);
+			var mediatorCoordinate = new GeoCoordinate(mediator.GeoLocation.Latitude,
+				mediator.GeoLocation.Longitude);
+
 			var closestLocationsId = geoLocations
-				.OrderBy(l => mediatorCoordinate.GetDistanceTo(new GeoCoordinate(l.Latitude, l.Longitude)))
+				.OrderBy(l => mediatorCoordinate.GetDistanceTo(
+					new GeoCoordinate(l.Latitude, l.Longitude)))
 				.Select(l => l.Id)
 				.Take(5);
 

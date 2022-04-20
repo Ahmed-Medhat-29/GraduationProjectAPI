@@ -20,7 +20,7 @@ namespace GraduationProjectAPI.Utilities.CustomAttributes
 			var files = value as IFormFileCollection ?? throw new InvalidCastException("Object must be of type IFormFileCollection");
 			foreach (var file in files)
 			{
-				if (!ImageExtensions.Extentions.Contains(Path.GetExtension(file.FileName.ToLower())))
+				if (!ValidImage.Extentions.Contains(Path.GetExtension(file.FileName.ToLower())))
 				{
 					ErrorMessage = "One or more images are not valid";
 					return false;

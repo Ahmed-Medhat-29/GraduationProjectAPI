@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using GraduationProjectAPI.Models.Location;
+using GraduationProjectAPI.Models.Reviews;
 using GraduationProjectAPI.Models.Shared;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
@@ -62,6 +63,8 @@ namespace GraduationProjectAPI.Models
 		public Locale Locale { get; set; }
 		public byte LocaleId { get; set; }
 
+		public ICollection<MediatorReview> ReviewsAboutMe;
+		public ICollection<MediatorReview> ReviewsByMe;
 		public ICollection<Notification> Notifications { get; set; }
 		public ICollection<Case> CasesAdded { get; set; }
 	}

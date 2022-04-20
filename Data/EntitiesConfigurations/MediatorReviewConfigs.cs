@@ -11,11 +11,11 @@ namespace GraduationProjectAPI.Data.EntitiesConfigurations
 			builder.HasKey(mr => new { mr.RevieweeId, mr.ReviewerId });
 
 			builder.HasOne(m => m.Reviewee)
-				.WithMany()
+				.WithMany(m => m.ReviewsAboutMe)
 				.OnDelete(DeleteBehavior.Restrict);
 
 			builder.HasOne(m => m.Reviewer)
-				.WithMany()
+				.WithMany(m => m.ReviewsByMe)
 				.OnDelete(DeleteBehavior.Restrict);
 		}
 	}
