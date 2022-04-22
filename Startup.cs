@@ -29,29 +29,29 @@ namespace GraduationProjectAPI
 
 			services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 				.AddJwtBearer(options =>
-				{
-					options.SaveToken = false;
-					options.TokenValidationParameters = new TokenValidationParameters()
 					{
-						ValidateLifetime = true,
-						ValidateIssuer = false,
-						ValidateAudience = false,
-						ValidateIssuerSigningKey = true,
-						ValidIssuer = _config["JWT:Issuer"],
-						ValidAudience = _config["JWT:Audience"],
-						IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["JWT:Key"]))
-					};
-				});
+						options.SaveToken = false;
+						options.TokenValidationParameters = new TokenValidationParameters()
+						{
+							ValidateLifetime = true,
+							ValidateIssuer = false,
+							ValidateAudience = false,
+							ValidateIssuerSigningKey = true,
+							ValidIssuer = _config["JWT:Issuer"],
+							ValidAudience = _config["JWT:Audience"],
+							IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["JWT:Key"]))
+						};
+					});
 
 			services.AddControllers()
 				.ConfigureApiBehaviorOptions(options =>
 					options.InvalidModelStateResponseFactory = actionContext => new BadRequest(actionContext.ModelState))
 				.AddJsonOptions(options =>
-				{
-					options.JsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
-					options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-					options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
-				});
+					{
+						options.JsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
+						options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+						options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+					});
 
 			services.AddAutoMapper(options => options.AddProfile<MapperProfile>());
 			services.AddScoped<IAuthenticationTokenGenerator, JwtGenerator>();

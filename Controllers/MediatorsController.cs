@@ -2,7 +2,6 @@
 using System.Device.Location;
 using System.Linq;
 using System.Security.Claims;
-using System.Text;
 using System.Threading.Tasks;
 using AutoMapper;
 using GraduationProjectAPI.Data;
@@ -13,11 +12,11 @@ using GraduationProjectAPI.Enums;
 using GraduationProjectAPI.Models;
 using GraduationProjectAPI.Models.CaseProperties;
 using GraduationProjectAPI.Models.Location;
-using GraduationProjectAPI.Models.Reviews;
 using GraduationProjectAPI.Models.Shared;
 using GraduationProjectAPI.Utilities;
 using GraduationProjectAPI.Utilities.AuthenticationConfigurations;
 using GraduationProjectAPI.Utilities.CustomApiResponses;
+using GraduationProjectAPI.Utilities.StaticStrings;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -34,8 +33,6 @@ namespace GraduationProjectAPI.Controllers
 		private readonly ApplicationDbContext _context;
 		private readonly IMapper _mapper;
 		private readonly IMemoryCache _memoryCache;
-		private const string _profilePictureUrl = "/api/mediators/profile-image/";
-		private const string _nationalIdImageUrl = "/api/mediators/nationalid-image/";
 
 		public MediatorsController(ApplicationDbContext context, IMapper mapper, IMemoryCache memoryCache)
 		{
@@ -68,9 +65,8 @@ namespace GraduationProjectAPI.Controllers
 				})
 				.ToArrayAsync();
 
-			var imageUrl = RequestPath().Append("/api/cases/image/");
 			foreach (var @case in cases)
-				@case.ImagesUrl = images.Where(i => i.CaseId == @case.Id).Select(i => imageUrl.Append(i.Id).ToString()).ToArray();
+				@case.ImagesUrl = images.Where(i => i.CaseId == @case.Id).Select(i => Paths.CaseImage(Request, i.Id)).ToArray();
 
 			return new Success(cases);
 		}
@@ -118,7 +114,7 @@ namespace GraduationProjectAPI.Controllers
 
 			var mediatorDto = await _context.Mediators
 				.Where(m => m.Id == mediator.Id)
-				.Select(m => new MediatorDto
+				.Select(m => new
 				{
 					Name = m.Name,
 					PhoneNumber = m.PhoneNumber,
@@ -135,8 +131,8 @@ namespace GraduationProjectAPI.Controllers
 					Status = mediator.Status.Name,
 					FirebaseToken = mediator.FirebaseToken,
 					JwtToken = tokenGenerator.Generate(mediator.Id.ToString()),
-					ProfileImageUrl = RequestPath().Append(_profilePictureUrl).ToString() + m.Id,
-					NationalIdImageUrl = RequestPath().Append(_nationalIdImageUrl).ToString() + m.Id,
+					ProfileImageUrl = Paths.ProfilePicture(Request, m.Id),
+					NationalIdImageUrl = Paths.NationalIdImage(Request, m.Id),
 					GeoLocation = new GeoLocationDto
 					{
 						Latitude = m.GeoLocation.Latitude,
@@ -154,12 +150,12 @@ namespace GraduationProjectAPI.Controllers
 			var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 			var mediatorDto = await _context.Mediators
 				.Where(m => m.Id == userId)
-				.Select(m => new ProfileDto
+				.Select(m => new
 				{
 					Name = m.Name,
 					Bio = m.Bio,
 					SocialStatusId = m.SocialStatusId,
-					ImageUrl = RequestPath().Append(_profilePictureUrl).ToString() + m.Id
+					ImageUrl = Paths.ProfilePicture(Request, m.Id)
 				}).FirstAsync();
 
 			return new Success(mediatorDto);
@@ -205,108 +201,6 @@ namespace GraduationProjectAPI.Controllers
 			return image == null ? NotFound(null) : File(image, "image/jpeg");
 		}
 
-		[HttpGet("pending-mediators")]
-		public async Task<IActionResult> PendingMediators()
-		{
-			var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-			var userGeoCoordinate = await _context.Mediators
-				.Where(m => m.Id == userId)
-				.Join(_context.GeoLocations,
-					m => m.GeoLocationId,
-					g => g.Id,
-					(m, g) => new GeoCoordinate(g.Latitude, g.Longitude))
-				.FirstAsync();
-
-			var geoLocations = await _context.Mediators
-				.Where(m => m.StatusId == (byte)StatusType.Pending && !m.ReviewsAboutMe.Any(r => r.ReviewerId == userId))
-				.Select(m => new GeoLocation
-				{
-					Id = m.GeoLocationId,
-					Latitude = m.GeoLocation.Latitude,
-					Longitude = m.GeoLocation.Longitude
-				})
-				.ToArrayAsync();
-
-			var closestLocationsId = geoLocations
-				.OrderBy(l => userGeoCoordinate.GetDistanceTo(new GeoCoordinate(l.Latitude, l.Longitude)))
-				.Select(l => l.Id)
-				.Take(5);
-
-			var pendingMediators = await _context.Mediators
-				.Where(m => closestLocationsId.Contains(m.GeoLocationId))
-				.Select(m => new
-				{
-					Id = m.Id,
-					Name = m.Name,
-					PhoneNumber = m.PhoneNumber,
-					Address = m.Address,
-					ImageUrl = RequestPath().Append(_profilePictureUrl).ToString() + m.Id
-				})
-				.ToArrayAsync();
-
-			return new Success(pendingMediators);
-		}
-
-		[HttpGet("pending-mediators/{id:min(1)}")]
-		public async Task<IActionResult> PendingMediators(int id)
-		{
-			var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-			var mediator = await _context.Mediators
-				.Where(m => m.Id == id && m.StatusId == (byte)StatusType.Pending && !m.ReviewsAboutMe.Any(r => r.ReviewerId == userId))
-				.Select(m => new
-				{
-					Id = m.Id,
-					Name = m.Name,
-					PhoneNumber = m.PhoneNumber,
-					Address = m.Address,
-					BirthDate = m.BirthDate,
-					ImageUrl = RequestPath().Append(_profilePictureUrl).ToString() + m.Id
-				})
-				.FirstOrDefaultAsync();
-
-			return new Success();
-		}
-
-		[HttpPost("[action]")]
-		public async Task<IActionResult> Reviews([FromForm] ReviewDto dto)
-		{
-			var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-			if (dto.RevieweeId == userId)
-				return new BadRequest("You can't review yurself");
-
-			var isMediatorExists = await _context.Mediators.AnyAsync(m => m.Id == dto.RevieweeId && m.Status.Name == StatusType.Pending.ToString());
-			if (!isMediatorExists)
-				return new BadRequest("No pending mediator with such id found");
-
-			var isReviewExists = await _context.MediatorReviews.AnyAsync(m => m.RevieweeId == dto.RevieweeId && m.ReviewerId == userId);
-			if (isReviewExists)
-				return new BadRequest("You have reviewed this mediator already");
-
-			var review = _mapper.Map<MediatorReview>(dto);
-			review.ReviewerId = userId;
-
-			await _context.MediatorReviews.AddAsync(review);
-			await _context.SaveChangesAsync();
-
-			var reviewsCount = await _context.MediatorReviews.CountAsync(m => m.RevieweeId == dto.RevieweeId);
-			if (reviewsCount >= 3)
-			{
-				var mediator = await _context.Mediators
-					.Where(m => m.Id == dto.RevieweeId)
-					.Select(m => new Mediator
-					{
-						Id = m.Id
-					})
-					.FirstOrDefaultAsync();
-
-				_context.Mediators.Attach(mediator);
-				mediator.StatusId = (byte)StatusType.Submitted;
-				await _context.SaveChangesAsync();
-			}
-
-			return new Success();
-		}
-
 		[AllowAnonymous]
 		[HttpPost("[action]")]
 		public async Task<IActionResult> ValidateNumber([FromForm] PhoneNumberDto numberDTO)
@@ -335,34 +229,7 @@ namespace GraduationProjectAPI.Controllers
 				return new BadRequest(nameof(nationalId), "National id already exists");
 		}
 
-		private BadRequest ValidateStatus(Mediator mediator)
-		{
-			if (mediator == null)
-				return new BadRequest("Please register first");
-
-			if (mediator.StatusId == (byte)StatusType.Pending || mediator.StatusId == (byte)StatusType.Submitted)
-				return new BadRequest(nameof(mediator.Status.Name), "Your registeration request is pending...");
-
-			if (mediator.StatusId == (byte)StatusType.Rejected)
-				return new BadRequest(nameof(mediator.Status.Name), "Your registeration request has been rejected");
-
-			return null;
-		}
-
-		private StringBuilder RequestPath()
-		{
-			return new StringBuilder(Request.Scheme).Append("://").Append(Request.Host).Append(Request.PathBase.ToString());
-		}
-
-		[HttpGet("[action]")]
-		public async Task<IActionResult> Notify([FromForm] string token, [FromForm] string title, [FromForm] string body)
-		{
-			var manager = new NotificationHandler(title, body);
-			await manager.SendAsync(token);
-			return new Success();
-		}
-
-		private async Task SendNotificationForNewMediatorAsync(Mediator mediator, IServiceScopeFactory scopeFactory)
+		private static async Task SendNotificationForNewMediatorAsync(Mediator mediator, IServiceScopeFactory scopeFactory)
 		{
 			using var scope = scopeFactory.CreateScope();
 			var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -393,7 +260,7 @@ namespace GraduationProjectAPI.Controllers
 				})
 				.ToArrayAsync();
 
-			var handler = new NotificationHandler("New Mediator", "Please check the new mediator");
+			var handler = new NotificationHandler("New Mediator", "Please check the new mediator", (byte)Enums.NotificationType.MediatorReview);
 			await handler.SendAsync(mediatorsToBeNotified.Select(m => m.FirebaseToken));
 
 			foreach (var med in mediatorsToBeNotified)
@@ -402,11 +269,35 @@ namespace GraduationProjectAPI.Controllers
 				{
 					Title = "New Mediator",
 					Body = "Please check the new mediator",
-					MediatorId = med.Id
+					MediatorId = med.Id,
+					TypeId = (byte)Enums.NotificationType.MediatorReview,
+					TaskId = mediator.Id
 				});
 			}
 
 			await context.SaveChangesAsync();
+		}
+
+		private static BadRequest ValidateStatus(Mediator mediator)
+		{
+			if (mediator == null)
+				return new BadRequest("Please register first");
+
+			if (mediator.StatusId == (byte)StatusType.Pending || mediator.StatusId == (byte)StatusType.Submitted)
+				return new BadRequest(nameof(mediator.Status.Name), "Your registeration request is pending...");
+
+			if (mediator.StatusId == (byte)StatusType.Rejected)
+				return new BadRequest(nameof(mediator.Status.Name), "Your registeration request has been rejected");
+
+			return null;
+		}
+
+		[HttpGet("[action]")]
+		public async Task<IActionResult> Notify([FromForm] string token, [FromForm] string title, [FromForm] string body)
+		{
+			var manager = new NotificationHandler(title, body, 0);
+			await manager.SendAsync(token);
+			return new Success();
 		}
 	}
 }

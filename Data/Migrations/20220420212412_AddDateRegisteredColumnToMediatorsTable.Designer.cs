@@ -4,14 +4,16 @@ using GraduationProjectAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace GraduationProjectAPI.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220420212412_AddDateRegisteredColumnToMediatorsTable")]
+    partial class AddDateRegisteredColumnToMediatorsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -505,22 +507,14 @@ namespace GraduationProjectAPI.Migrations
                     b.Property<int>("MediatorId")
                         .HasColumnType("int");
 
-                    b.Property<int>("TaskId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(4000)
                         .HasColumnType("nvarchar(4000)");
 
-                    b.Property<byte>("TypeId")
-                        .HasColumnType("tinyint");
-
                     b.HasKey("Id");
 
                     b.HasIndex("MediatorId");
-
-                    b.HasIndex("TypeId");
 
                     b.ToTable("Notifications");
                 });
@@ -560,11 +554,6 @@ namespace GraduationProjectAPI.Migrations
                     b.Property<int>("CaseId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("DateReviewed")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("date")
-                        .HasDefaultValueSql("GETDATE()");
-
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(4000)
@@ -587,11 +576,6 @@ namespace GraduationProjectAPI.Migrations
 
                     b.Property<int>("ReviewerId")
                         .HasColumnType("int");
-
-                    b.Property<DateTime>("DateReviewed")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("date")
-                        .HasDefaultValueSql("GETDATE()");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -910,21 +894,13 @@ namespace GraduationProjectAPI.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("GraduationProjectAPI.Models.NotificationType", "Type")
-                        .WithMany()
-                        .HasForeignKey("TypeId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.Navigation("Mediator");
-
-                    b.Navigation("Type");
                 });
 
             modelBuilder.Entity("GraduationProjectAPI.Models.Reviews.CaseReview", b =>
                 {
                     b.HasOne("GraduationProjectAPI.Models.Case", "Case")
-                        .WithMany("CaseReviews")
+                        .WithMany()
                         .HasForeignKey("CaseId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -961,8 +937,6 @@ namespace GraduationProjectAPI.Migrations
 
             modelBuilder.Entity("GraduationProjectAPI.Models.Case", b =>
                 {
-                    b.Navigation("CaseReviews");
-
                     b.Navigation("Images");
                 });
 

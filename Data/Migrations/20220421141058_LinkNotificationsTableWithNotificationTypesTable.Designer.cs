@@ -4,14 +4,16 @@ using GraduationProjectAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace GraduationProjectAPI.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220421141058_LinkNotificationsTableWithNotificationTypesTable")]
+    partial class LinkNotificationsTableWithNotificationTypesTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -560,11 +562,6 @@ namespace GraduationProjectAPI.Migrations
                     b.Property<int>("CaseId")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("DateReviewed")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("date")
-                        .HasDefaultValueSql("GETDATE()");
-
                     b.Property<string>("Description")
                         .IsRequired()
                         .HasMaxLength(4000)
@@ -587,11 +584,6 @@ namespace GraduationProjectAPI.Migrations
 
                     b.Property<int>("ReviewerId")
                         .HasColumnType("int");
-
-                    b.Property<DateTime>("DateReviewed")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("date")
-                        .HasDefaultValueSql("GETDATE()");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -924,7 +916,7 @@ namespace GraduationProjectAPI.Migrations
             modelBuilder.Entity("GraduationProjectAPI.Models.Reviews.CaseReview", b =>
                 {
                     b.HasOne("GraduationProjectAPI.Models.Case", "Case")
-                        .WithMany("CaseReviews")
+                        .WithMany()
                         .HasForeignKey("CaseId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -961,8 +953,6 @@ namespace GraduationProjectAPI.Migrations
 
             modelBuilder.Entity("GraduationProjectAPI.Models.Case", b =>
                 {
-                    b.Navigation("CaseReviews");
-
                     b.Navigation("Images");
                 });
 

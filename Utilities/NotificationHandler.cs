@@ -10,9 +10,9 @@ namespace GraduationProjectAPI.Utilities
 	{
 		private readonly NotificationDto _notification;
 
-		public NotificationHandler(string title, string body)
+		public NotificationHandler(string title, string body, byte typeId)
 		{
-			_notification = new NotificationDto(title, body);
+			_notification = new NotificationDto(title, body, typeId);
 		}
 
 		public async Task SendAsync(string token)

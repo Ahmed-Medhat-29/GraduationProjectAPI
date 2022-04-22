@@ -9,6 +9,9 @@ namespace GraduationProjectAPI.Data.EntitiesConfigurations
 		public void Configure(EntityTypeBuilder<CaseReview> builder)
 		{
 			builder.HasKey(cr => new { cr.MediatorId, cr.CaseId });
+
+			builder.Property(cr => cr.DateReviewed)
+				.HasDefaultValueSql("GETDATE()");
 		}
 	}
 }

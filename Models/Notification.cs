@@ -16,5 +16,10 @@ namespace GraduationProjectAPI.Models
 
 		public Mediator Mediator { get; set; }
 		public int MediatorId { get; set; }
+
+		public NotificationType Type { get; set; }
+		public byte TypeId { get; set; }
+
+		public int TaskId { get; set; }
 	}
 }

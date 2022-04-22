@@ -45,6 +45,9 @@ namespace GraduationProjectAPI.Models
 		[Required]
 		public byte[] NationalIdImage { get; set; }
 
+		[Column(TypeName = "datetime2(0)")]
+		public DateTime DateRegistered { get; private set; } = DateTime.Now;
+
 		public GeoLocation GeoLocation { get; set; }
 		public int GeoLocationId { get; set; }
 

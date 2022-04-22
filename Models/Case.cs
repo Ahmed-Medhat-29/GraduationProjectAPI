@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using GraduationProjectAPI.Models.CaseProperties;
 using GraduationProjectAPI.Models.Location;
+using GraduationProjectAPI.Models.Reviews;
 using GraduationProjectAPI.Models.Shared;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
@@ -78,6 +79,7 @@ namespace GraduationProjectAPI.Models
 		public Status Status { get; set; }
 		public byte StatusId { get; set; }
 
+		public ICollection<CaseReview> CaseReviews { get; set; }
 		public ICollection<Image> Images { get; set; }
 	}
 }
