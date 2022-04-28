@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using GraduationProjectAPI.Models.Location;
 
 namespace GraduationProjectAPI.DTOs
 {
@@ -12,5 +13,27 @@ namespace GraduationProjectAPI.DTOs
 
 		[Required, MaxLength(4000)]
 		public string Details { get; set; }
+
+		public GeoLocationDto()
+		{
+
+		}
+
+		public GeoLocationDto(GeoLocation geoLocation)
+		{
+			Longitude = geoLocation.Longitude;
+			Latitude = geoLocation.Latitude;
+			Details = geoLocation.Details;
+		}
+
+		public GeoLocation ToGeoLocation()
+		{
+			return new GeoLocation
+			{
+				Longitude = Longitude,
+				Latitude = Latitude,
+				Details = Details
+			};
+		}
 	}
 }

@@ -4,14 +4,16 @@ using GraduationProjectAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace GraduationProjectAPI.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220425205836_InitializeDatabase")]
+    partial class InitializeDatabase
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -508,15 +510,6 @@ namespace GraduationProjectAPI.Migrations
                         .HasMaxLength(4000)
                         .HasColumnType("nvarchar(4000)");
 
-                    b.Property<DateTime>("DateTime")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2(0)")
-                        .HasDefaultValueSql("GETDATE()");
-
-                    b.Property<string>("ImageUrl")
-                        .IsRequired()
-                        .HasColumnType("varchar(4000)");
-
                     b.Property<bool>("IsRead")
                         .HasColumnType("bit");
 
@@ -528,8 +521,8 @@ namespace GraduationProjectAPI.Migrations
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasMaxLength(250)
-                        .HasColumnType("nvarchar(250)");
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
 
                     b.Property<byte>("TypeId")
                         .HasColumnType("tinyint");
@@ -561,22 +554,12 @@ namespace GraduationProjectAPI.Migrations
                         new
                         {
                             Id = (byte)1,
-                            Name = "General"
+                            Name = "MediatorReview"
                         },
                         new
                         {
                             Id = (byte)2,
-                            Name = "Mediator"
-                        },
-                        new
-                        {
-                            Id = (byte)3,
-                            Name = "Case"
-                        },
-                        new
-                        {
-                            Id = (byte)4,
-                            Name = "Payment"
+                            Name = "CaseReview"
                         });
                 });
 

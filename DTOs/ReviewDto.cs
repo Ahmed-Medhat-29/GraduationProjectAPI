@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using GraduationProjectAPI.Models.Reviews;
 
 namespace GraduationProjectAPI.DTOs
 {
@@ -11,5 +12,25 @@ namespace GraduationProjectAPI.DTOs
 
 		[Required, MaxLength(4000)]
 		public string Description { get; set; }
+
+		public MediatorReview ToMediatorReview()
+		{
+			return new MediatorReview
+			{
+				RevieweeId = RevieweeId,
+				IsWorthy = IsWorthy,
+				Description = Description
+			};
+		}
+
+		public CaseReview ToCaseReview()
+		{
+			return new CaseReview
+			{
+				CaseId = RevieweeId,
+				IsWorthy = IsWorthy,
+				Description = Description
+			};
+		}
 	}
 }

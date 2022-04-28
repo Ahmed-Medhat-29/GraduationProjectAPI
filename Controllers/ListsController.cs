@@ -5,11 +5,9 @@ using System.Threading.Tasks;
 using GraduationProjectAPI.Data;
 using GraduationProjectAPI.DTOs;
 using GraduationProjectAPI.DTOs.Case;
-using GraduationProjectAPI.Enums;
-using GraduationProjectAPI.Models.CaseProperties;
 using GraduationProjectAPI.Models.Shared;
-using GraduationProjectAPI.Utilities;
 using GraduationProjectAPI.Utilities.CustomApiResponses;
+using GraduationProjectAPI.Utilities.StaticStrings;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
@@ -100,9 +98,9 @@ namespace GraduationProjectAPI.Controllers
 			{
 				Genders = GetGenders(),
 				SocialStatus = GetSocialStatus(),
-				Relationships = Enum.GetValues<RelationshipType>().Select(e => new Relationship { Id = (byte)e, Name = e.ToString() }),
-				Periods = Enum.GetValues<PeriodType>().Select(e => new Period { Id = (byte)e, Name = e.ToEnumString() }),
-				Priorities = Enum.GetValues<PriorityType>().Select(e => new Priority { Id = (byte)e, Name = e.ToString() }),
+				Relationships = StaticValues.Relationships(),
+				Periods = StaticValues.Periods(),
+				Priorities = StaticValues.Priorities(),
 				Categories = await categories,
 			};
 
@@ -116,7 +114,7 @@ namespace GraduationProjectAPI.Controllers
 			if (_memoryCache.TryGetValue(nameof(genders), out genders))
 				return genders;
 
-			genders = Enum.GetValues<GenderType>().Select(e => new Gender { Id = (byte)e, Name = e.ToString() });
+			genders = StaticValues.Genders();
 			_memoryCache.Set(nameof(genders), genders, DateTimeOffset.Now.AddMinutes(1));
 			return genders;
 		}
@@ -127,7 +125,7 @@ namespace GraduationProjectAPI.Controllers
 			if (_memoryCache.TryGetValue(nameof(socialStatus), out socialStatus))
 				return socialStatus;
 
-			socialStatus = Enum.GetValues<SocialStatusType>().Select(e => new SocialStatus { Id = (byte)e, Name = e.ToString() });
+			socialStatus = StaticValues.SocialStatus();
 			_memoryCache.Set(nameof(socialStatus), socialStatus, DateTimeOffset.Now.AddMinutes(1));
 			return socialStatus;
 		}

@@ -1,6 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using GraduationProjectAPI.Enums;
+using GraduationProjectAPI.Models.CaseProperties;
 using GraduationProjectAPI.Utilities.CustomAttributes;
+using GraduationProjectAPI.Utilities.General;
 using Microsoft.AspNetCore.Http;
 
 namespace GraduationProjectAPI.DTOs.Case
@@ -20,14 +25,14 @@ namespace GraduationProjectAPI.DTOs.Case
 		[Required, MaxLength(14), MinLength(14), RegularExpression("^[0-9]+$", ErrorMessage = "National id must be only numbers")]
 		public string NationalId { get; set; }
 
-		[Required, ImageFile]
+		[Required, ImageFile(MaxSize = 1024 * 1024)]
 		public IFormFile NationalIdImage { get; set; }
 
-		[Range(1, 2)]
-		public byte GenderId { get; set; }
+		[Required]
+		public GenderType? GenderId { get; set; }
 
-		[Range(1, 4)]
-		public byte SocialStatusId { get; set; }
+		[Required]
+		public SocialStatusType? SocialStatusId { get; set; }
 
 		// Case itselt
 
@@ -46,8 +51,8 @@ namespace GraduationProjectAPI.DTOs.Case
 
 		public byte Children { get; set; }
 
-		[Range(1, byte.MaxValue)]
-		public byte RelationshipId { get; set; }
+		[Required]
+		public RelationshipType? RelationshipId { get; set; }
 
 		[Required]
 		public GeoLocationDto GeoLocation { get; set; }
@@ -61,13 +66,41 @@ namespace GraduationProjectAPI.DTOs.Case
 		[Range(1, byte.MaxValue)]
 		public byte CategoryId { get; set; }
 
-		[Range(1, byte.MaxValue)]
-		public byte PeriodId { get; set; }
+		[Required]
+		public PeriodType? PeriodId { get; set; }
 
-		[Range(1, byte.MaxValue)]
-		public byte PriorityId { get; set; }
+		[Required]
+		public PriorityType PriorityId { get; set; }
 
 		[ImageCollection(MaxSize = 1024 * 1024)]
 		public IFormFileCollection OptionalImages { get; set; }
+
+		public Models.Case ToCase()
+		{
+			return new Models.Case
+			{
+				Name = Name,
+				PhoneNumber = PhoneNumber,
+				BirthDate = BirthDate,
+				NationalId = NationalId,
+				Title = Title,
+				Story = Story,
+				NeededMoneyAmount = NeededMoneyAmount,
+				PaymentDate = PaymentDate,
+				Adults = Adults,
+				Children = Children,
+				Address = Address,
+				RegionId = RegionId,
+				CategoryId = CategoryId,
+				GenderId = (byte)GenderId,
+				SocialStatusId = (byte)SocialStatusId,
+				RelationshipId = (byte)RelationshipId,
+				PeriodId = (byte)PeriodId,
+				PriorityId = (byte)PriorityId,
+				GeoLocation = GeoLocation.ToGeoLocation(),
+				NationalIdImage = FormFileHandler.ConvertToBytes(NationalIdImage),
+				Images = (ICollection<Image>)OptionalImages.Select(i => new Image(FormFileHandler.ConvertToBytes(i)))
+			};
+		}
 	}
 }

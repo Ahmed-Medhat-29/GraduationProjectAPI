@@ -10,27 +10,24 @@ namespace GraduationProjectAPI.Utilities.StaticStrings
 		private const string _nationalIdImage = "/api/mediators/nationalid-image/";
 		private const string _caseImage = "/api/cases/images/";
 
-		private static StringBuilder InitCommon(HttpRequest request)
+		public static void InitCommon(HttpRequest Request)
 		{
-			if (_common == null)
-				_common = new StringBuilder(request.Scheme).Append("://").Append(request.Host).Append(request.PathBase.ToString());
-
-			return _common;
+			_common = new StringBuilder(Request.Scheme).Append("://").Append(Request.Host).Append(Request.PathBase.ToString());
 		}
 
-		public static string ProfilePicture(HttpRequest request, int id)
+		public static string ProfilePicture(int id)
 		{
-			return InitCommon(request).Append(_profilePicture).Append(id).ToString();
+			return _common.Append(_profilePicture).Append(id).ToString();
 		}
 
-		public static string NationalIdImage(HttpRequest request, int id)
+		public static string NationalIdImage(int id)
 		{
-			return InitCommon(request).Append(_nationalIdImage).Append(id).ToString();
+			return _common.Append(_nationalIdImage).Append(id).ToString();
 		}
 
-		public static string CaseImage(HttpRequest request, int id)
+		public static string CaseImage(int id)
 		{
-			return InitCommon(request).Append(_caseImage).Append(id).ToString();
+			return _common.Append(_caseImage).Append(id).ToString();
 		}
 	}
 }

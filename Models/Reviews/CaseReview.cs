@@ -1,7 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace GraduationProjectAPI.Models.Reviews
 {
@@ -20,15 +20,5 @@ namespace GraduationProjectAPI.Models.Reviews
 
 		[Column(TypeName = "date")]
 		public DateTime DateReviewed { get; private set; } = DateTime.Now;
-
-		public CaseReview()
-		{
-
-		}
-
-		public CaseReview(int mediatorId)
-		{
-			MediatorId = mediatorId;
-		}
 	}
 }

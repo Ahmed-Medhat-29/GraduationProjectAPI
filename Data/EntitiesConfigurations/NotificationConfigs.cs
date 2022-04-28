@@ -11,6 +11,9 @@ namespace GraduationProjectAPI.Data.EntitiesConfigurations
 			builder.HasOne(n => n.Type)
 				.WithMany()
 				.OnDelete(DeleteBehavior.Restrict);
+
+			builder.Property(n => n.DateTime)
+				.HasDefaultValueSql("GETDATE()");
 		}
 	}
 }

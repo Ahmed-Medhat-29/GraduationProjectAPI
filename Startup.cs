@@ -1,9 +1,9 @@
 using System.Text;
 using System.Text.Json;
 using GraduationProjectAPI.Data;
-using GraduationProjectAPI.Utilities;
 using GraduationProjectAPI.Utilities.AuthenticationConfigurations;
 using GraduationProjectAPI.Utilities.CustomApiResponses;
+using GraduationProjectAPI.Utilities.StaticStrings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
@@ -53,7 +53,6 @@ namespace GraduationProjectAPI
 						options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
 					});
 
-			services.AddAutoMapper(options => options.AddProfile<MapperProfile>());
 			services.AddScoped<IAuthenticationTokenGenerator, JwtGenerator>();
 
 			services.AddMemoryCache();
@@ -63,16 +62,17 @@ namespace GraduationProjectAPI
 		{
 			app.UseDeveloperExceptionPage();
 			app.UseStaticFiles();
-			//app.Use(async (context, next) =>
-			//{
-			//	new Task(() =>
-			//	{
-			//		if (context.Request.Method == "POST" && !string.IsNullOrWhiteSpace(context.Request.ContentType))
-			//			HttpRequestLogger.Log(context.Request);
-			//	}).Start();
+			app.Use(async (context, next) =>
+			{
+				//new Task(() =>
+				//{
+				//	if (context.Request.Method == "POST" && !string.IsNullOrWhiteSpace(context.Request.ContentType))
+				//		HttpRequestLogger.Log(context.Request);
+				//}).Start();
 
-			//	await next.Invoke();
-			//});
+				Paths.InitCommon(context.Request);
+				await next.Invoke();
+			});
 
 			app.UseRouting();
 			app.UseAuthentication();

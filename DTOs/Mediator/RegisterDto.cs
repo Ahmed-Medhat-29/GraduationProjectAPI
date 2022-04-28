@@ -1,21 +1,26 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using GraduationProjectAPI.Enums;
 using GraduationProjectAPI.Utilities.CustomAttributes;
+using GraduationProjectAPI.Utilities.General;
 using Microsoft.AspNetCore.Http;
 
 namespace GraduationProjectAPI.DTOs.Mediator
 {
+	[UniqueMediator]
 	public class RegisterDto
 	{
-		[Required, MaxLength(250), MinLength(2)]
+		[Required, MinLength(2), MaxLength(250)]
 		public string Name { get; set; }
 
-		[Required, MaxLength(11), MinLength(11), RegularExpression("^[0-9]+$", ErrorMessage = "Phone number must be only numbers")]
+		[Required, MinLength(11), MaxLength(11)]
+		[RegularExpression("^[0-9]+$", ErrorMessage = "Phone number must be only numbers")]
 		public string PhoneNumber { get; set; }
 
 		[Required]
 		public GeoLocationDto GeoLocation { get; set; }
 
-		[Required, MaxLength(14), MinLength(14), RegularExpression("^[0-9]+$", ErrorMessage = "National id must be only numbers")]
+		[Required, MaxLength(14), MinLength(14)]
+		[RegularExpression("^[0-9]+$", ErrorMessage = "National ID must be only numbers")]
 		public string NationalId { get; set; }
 
 		[Required, MaxLength(4000)]
@@ -27,10 +32,27 @@ namespace GraduationProjectAPI.DTOs.Mediator
 		[Required, ImageFile(MaxSize = 1024 * 1024)]
 		public IFormFile NationalIdImage { get; set; }
 
-		[Range(1, 2)]
-		public byte GenderId { get; set; }
+		[Required]
+		public GenderType? GenderId { get; set; }
 
-		[Range(1, 4)]
-		public byte SocialStatusId { get; set; }
+		[Required]
+		public SocialStatusType? SocialStatusId { get; set; }
+
+		public Models.Mediator ToMediator()
+		{
+			return new Models.Mediator
+			{
+				Name = Name,
+				PhoneNumber = PhoneNumber,
+				FirebaseToken = FirebaseToken,
+				GeoLocation = GeoLocation.ToGeoLocation(),
+				ProfileImage = FormFileHandler.ConvertToBytes(ProfileImage),
+				NationalIdImage = FormFileHandler.ConvertToBytes(NationalIdImage),
+				GenderId = (byte)GenderId,
+				SocialStatusId = (byte)SocialStatusId,
+				StatusId = (byte)StatusType.Pending,
+				LocaleId = (byte)LocaleType.EN
+			};
+		}
 	}
 }

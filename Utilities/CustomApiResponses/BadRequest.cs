@@ -20,9 +20,16 @@ namespace GraduationProjectAPI.Utilities.CustomApiResponses
 
 		public BadRequest(ModelStateDictionary modelState)
 		{
-			Errors = new Dictionary<string, IEnumerable<string>>();
-			foreach (var model in modelState.Where(m => m.Value.Errors.Count > 0))
-				Errors.Add(model.Key, model.Value.Errors.Select(e => e.ErrorMessage));
+			var invalidModels = modelState.Where(m => m.Value.Errors.Count > 0);
+			if (modelState.ErrorCount == 1 && string.IsNullOrWhiteSpace(invalidModels.First().Key))
+				Message = invalidModels.First().Value.Errors.Select(e => e.ErrorMessage).First();
+			else
+			{
+				Errors = new Dictionary<string, IEnumerable<string>>();
+				foreach (var model in invalidModels)
+					Errors.Add(model.Key, model.Value.Errors.Select(e => e.ErrorMessage));
+
+			}
 		}
 
 		public BadRequest(IDictionary<string, IEnumerable<string>> errors)

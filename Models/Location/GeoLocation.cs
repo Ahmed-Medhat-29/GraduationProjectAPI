@@ -15,5 +15,17 @@ namespace GraduationProjectAPI.Models.Location
 
 		[Required, MaxLength(4000)]
 		public string Details { get; set; }
+
+		public GeoLocation()
+		{
+
+		}
+
+		public GeoLocation(GeoLocation geoLocation)
+		{
+			Id = geoLocation.Id;
+			Longitude = geoLocation.Longitude;
+			Latitude = geoLocation.Latitude;
+		}
 	}
 }

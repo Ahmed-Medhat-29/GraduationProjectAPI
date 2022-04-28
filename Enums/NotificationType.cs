@@ -2,7 +2,9 @@
 {
 	public enum NotificationType : byte
 	{
-		MediatorReview = 1,
-		CaseReview = 2
+		General = 1,
+		Mediator = 2,
+		Case = 3,
+		Payment = 4
 	}
 }
