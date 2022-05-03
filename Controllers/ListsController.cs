@@ -20,11 +20,13 @@ namespace GraduationProjectAPI.Controllers
 	{
 		private readonly ApplicationDbContext _context;
 		private readonly IMemoryCache _memoryCache;
+		private readonly DateTimeOffset _cacheDuration;
 
 		public ListsController(ApplicationDbContext context, IMemoryCache memoryCache)
 		{
 			_context = context;
 			_memoryCache = memoryCache;
+			_cacheDuration = DateTimeOffset.Now.AddMinutes(1);
 		}
 
 		[HttpGet("[action]")]
@@ -38,12 +40,12 @@ namespace GraduationProjectAPI.Controllers
 				.Select(g => new ListItem(g.Id, g.Name))
 				.ToArrayAsync();
 
-			_memoryCache.Set(nameof(governorates), governorates, DateTimeOffset.Now.AddMinutes(1));
+			_memoryCache.Set(nameof(governorates), governorates, _cacheDuration);
 			return new Success(governorates);
 		}
 
-		[HttpGet("[action]/{id}")]
-		public async Task<IActionResult> Cities(uint id)
+		[HttpGet("[action]/{id:min(1)}")]
+		public async Task<IActionResult> Cities(int id)
 		{
 			IEnumerable<ListItem> cities;
 			if (_memoryCache.TryGetValue(nameof(cities) + id, out cities))
@@ -54,12 +56,12 @@ namespace GraduationProjectAPI.Controllers
 				.Select(c => new ListItem(c.Id, c.Name))
 				.ToArrayAsync();
 
-			_memoryCache.Set(nameof(cities) + id, cities, DateTimeOffset.Now.AddMinutes(1));
+			_memoryCache.Set(nameof(cities) + id, cities, _cacheDuration);
 			return new Success(cities);
 		}
 
-		[HttpGet("[action]/{id}")]
-		public async Task<IActionResult> Regions(uint id)
+		[HttpGet("[action]/{id:min(1)}")]
+		public async Task<IActionResult> Regions(int id)
 		{
 			IEnumerable<ListItem> regions;
 			if (_memoryCache.TryGetValue(nameof(regions) + id, out regions))
@@ -70,7 +72,7 @@ namespace GraduationProjectAPI.Controllers
 				.Select(r => new ListItem(r.Id, r.Name))
 				.ToArrayAsync();
 
-			_memoryCache.Set(nameof(regions) + id, regions, DateTimeOffset.Now.AddMinutes(1));
+			_memoryCache.Set(nameof(regions) + id, regions, _cacheDuration);
 			return new Success(regions);
 		}
 
@@ -104,7 +106,7 @@ namespace GraduationProjectAPI.Controllers
 				Categories = await categories,
 			};
 
-			_memoryCache.Set(nameof(properties), properties, DateTimeOffset.Now.AddMinutes(1));
+			_memoryCache.Set(nameof(properties), properties, _cacheDuration);
 			return new Success(properties);
 		}
 
@@ -115,7 +117,7 @@ namespace GraduationProjectAPI.Controllers
 				return genders;
 
 			genders = StaticValues.Genders();
-			_memoryCache.Set(nameof(genders), genders, DateTimeOffset.Now.AddMinutes(1));
+			_memoryCache.Set(nameof(genders), genders, _cacheDuration);
 			return genders;
 		}
 
@@ -126,7 +128,7 @@ namespace GraduationProjectAPI.Controllers
 				return socialStatus;
 
 			socialStatus = StaticValues.SocialStatus();
-			_memoryCache.Set(nameof(socialStatus), socialStatus, DateTimeOffset.Now.AddMinutes(1));
+			_memoryCache.Set(nameof(socialStatus), socialStatus, _cacheDuration);
 			return socialStatus;
 		}
 	}

@@ -4,14 +4,16 @@ using GraduationProjectAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace GraduationProjectAPI.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220430224152_CreateChatsTable")]
+    partial class CreateChatsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -284,16 +286,11 @@ namespace GraduationProjectAPI.Migrations
 
             modelBuilder.Entity("GraduationProjectAPI.Models.Chat", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<int>("ChatId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("DateTime")
                         .HasColumnType("datetime2(2)");
+
+                    b.Property<int>("Id")
+                        .HasColumnType("int");
 
                     b.Property<int>("MediatorId")
                         .HasColumnType("int");
@@ -306,7 +303,7 @@ namespace GraduationProjectAPI.Migrations
                     b.Property<byte>("MessageTypeId")
                         .HasColumnType("tinyint");
 
-                    b.HasKey("Id");
+                    b.HasIndex("Id");
 
                     b.HasIndex("MediatorId");
 

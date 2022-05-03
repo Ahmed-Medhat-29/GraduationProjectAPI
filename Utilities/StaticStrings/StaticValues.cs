@@ -22,6 +22,12 @@ namespace GraduationProjectAPI.Utilities.StaticStrings
 				.Select(e => new Models.NotificationType { Id = (byte)e, Name = e.ToString() });
 		}
 
+		public static IEnumerable<Models.MessageType> MessageTypes()
+		{
+			return Enum.GetValues<MessageType>()
+				.Select(e => new Models.MessageType { Id = (byte)e, Name = e.ToString() });
+		}
+
 		public static IEnumerable<Gender> Genders()
 		{
 			return Enum.GetValues<GenderType>()

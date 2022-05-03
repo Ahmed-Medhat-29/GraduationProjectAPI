@@ -44,6 +44,7 @@ namespace GraduationProjectAPI.DTOs.Mediator
 			{
 				Name = Name,
 				PhoneNumber = PhoneNumber,
+				NationalId = NationalId,
 				FirebaseToken = FirebaseToken,
 				GeoLocation = GeoLocation.ToGeoLocation(),
 				ProfileImage = FormFileHandler.ConvertToBytes(ProfileImage),

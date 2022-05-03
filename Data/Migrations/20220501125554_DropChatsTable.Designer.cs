@@ -4,14 +4,16 @@ using GraduationProjectAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace GraduationProjectAPI.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220501125554_DropChatsTable")]
+    partial class DropChatsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -280,39 +282,6 @@ namespace GraduationProjectAPI.Migrations
                             Id = (byte)3,
                             Name = "Neighbor"
                         });
-                });
-
-            modelBuilder.Entity("GraduationProjectAPI.Models.Chat", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<int>("ChatId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("DateTime")
-                        .HasColumnType("datetime2(2)");
-
-                    b.Property<int>("MediatorId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Message")
-                        .IsRequired()
-                        .HasMaxLength(4000)
-                        .HasColumnType("nvarchar(4000)");
-
-                    b.Property<byte>("MessageTypeId")
-                        .HasColumnType("tinyint");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("MediatorId");
-
-                    b.HasIndex("MessageTypeId");
-
-                    b.ToTable("Chats");
                 });
 
             modelBuilder.Entity("GraduationProjectAPI.Models.Complain", b =>
@@ -943,25 +912,6 @@ namespace GraduationProjectAPI.Migrations
                         .IsRequired();
 
                     b.Navigation("Case");
-                });
-
-            modelBuilder.Entity("GraduationProjectAPI.Models.Chat", b =>
-                {
-                    b.HasOne("GraduationProjectAPI.Models.Mediator", "Mediator")
-                        .WithMany()
-                        .HasForeignKey("MediatorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("GraduationProjectAPI.Models.MessageType", "MessageType")
-                        .WithMany()
-                        .HasForeignKey("MessageTypeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Mediator");
-
-                    b.Navigation("MessageType");
                 });
 
             modelBuilder.Entity("GraduationProjectAPI.Models.Location.City", b =>

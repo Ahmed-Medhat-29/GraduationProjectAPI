@@ -8,9 +8,10 @@
 		public int PerPage { get; set; } = MaxPageSize; // Maximum number of elements per page
 		public int Total { get; set; } // Number of elements in current page
 
-		public Pagination()
+		public Pagination(int? currentPage)
 		{
-
+			CurrentPage = currentPage ?? 1;
+			LastPage = 1;
 		}
 
 		public Pagination(int currentPage, int totalCount, int totalInPage)

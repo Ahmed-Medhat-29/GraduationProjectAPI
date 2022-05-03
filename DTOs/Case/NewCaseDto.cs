@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using GraduationProjectAPI.Enums;
@@ -10,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 
 namespace GraduationProjectAPI.DTOs.Case
 {
+	[UniqueCase]
 	public class NewCaseDto
 	{
 		// Responsipility Holder
@@ -75,7 +75,7 @@ namespace GraduationProjectAPI.DTOs.Case
 		[ImageCollection(MaxSize = 1024 * 1024)]
 		public IFormFileCollection OptionalImages { get; set; }
 
-		public Models.Case ToCase()
+		public Models.Case ToCase(int mediatorId)
 		{
 			return new Models.Case
 			{
@@ -90,6 +90,7 @@ namespace GraduationProjectAPI.DTOs.Case
 				Adults = Adults,
 				Children = Children,
 				Address = Address,
+				MediatorId = mediatorId,
 				RegionId = RegionId,
 				CategoryId = CategoryId,
 				GenderId = (byte)GenderId,
@@ -97,9 +98,10 @@ namespace GraduationProjectAPI.DTOs.Case
 				RelationshipId = (byte)RelationshipId,
 				PeriodId = (byte)PeriodId,
 				PriorityId = (byte)PriorityId,
+				StatusId = (byte)StatusType.Pending,
 				GeoLocation = GeoLocation.ToGeoLocation(),
 				NationalIdImage = FormFileHandler.ConvertToBytes(NationalIdImage),
-				Images = (ICollection<Image>)OptionalImages.Select(i => new Image(FormFileHandler.ConvertToBytes(i)))
+				Images = OptionalImages.Select(i => new Image(FormFileHandler.ConvertToBytes(i))).ToArray()
 			};
 		}
 	}

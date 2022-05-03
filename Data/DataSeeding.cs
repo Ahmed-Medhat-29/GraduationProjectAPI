@@ -18,6 +18,7 @@ namespace GraduationProjectAPI.Data
 			builder.Entity<Priority>().HasData(StaticValues.Priorities());
 			builder.Entity<Relationship>().HasData(StaticValues.Relationships());
 			builder.Entity<NotificationType>().HasData(StaticValues.NotificationTypes());
+			builder.Entity<MessageType>().HasData(StaticValues.MessageTypes());
 		}
 	}
 }

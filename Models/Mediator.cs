@@ -55,7 +55,7 @@ namespace GraduationProjectAPI.Models
 		public int? RegionId { get; set; }
 
 		public Gender Gender { get; set; }
-		public byte GenderId { get; set; }
+		public int GenderId { get; set; }
 
 		public SocialStatus SocialStatus { get; set; }
 		public byte SocialStatusId { get; set; }

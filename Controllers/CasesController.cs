@@ -8,7 +8,6 @@ using GraduationProjectAPI.DTOs;
 using GraduationProjectAPI.DTOs.Case;
 using GraduationProjectAPI.Enums;
 using GraduationProjectAPI.Models;
-using GraduationProjectAPI.Models.Location;
 using GraduationProjectAPI.Utilities.CustomApiResponses;
 using GraduationProjectAPI.Utilities.General;
 using GraduationProjectAPI.Utilities.StaticStrings;
@@ -39,13 +38,7 @@ namespace GraduationProjectAPI.Controllers
 		[HttpPost]
 		public async Task<IActionResult> Add([FromForm] NewCaseDto dto)
 		{
-			var result = await ValidateCaseAsync(dto);
-			if (result != null)
-				return result;
-
-			var newCase = dto.ToCase();
-			newCase.MediatorId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-			newCase.StatusId = (byte)StatusType.Pending;
+			var newCase = dto.ToCase(GetUserId());
 			await _context.AddAsync(newCase);
 			await _context.SaveChangesAsync();
 			_ = SendNotificationForNewCaseAsync(newCase);
@@ -55,41 +48,23 @@ namespace GraduationProjectAPI.Controllers
 		[HttpGet("[action]/{id:min(1)}")]
 		public async Task<IActionResult> Images(int id)
 		{
-			byte[] image;
-			if (_memoryCache.TryGetValue(nameof(image) + id, out image))
-				return File(image, "image/jpeg");
+			byte[] caseImage;
+			if (_memoryCache.TryGetValue(nameof(caseImage) + id, out caseImage))
+				return File(caseImage, "image/jpeg");
 
-			image = await _context.Images
+			caseImage = await _context.Images
 				.Where(m => m.Id == id)
 				.Select(m => m.Data)
 				.FirstOrDefaultAsync();
 
-			if (image == null)
+			if (caseImage == null)
 				return NotFound(null);
 
-			_memoryCache.Set(nameof(image) + id, image, DateTimeOffset.Now.AddMinutes(10));
-			return File(image, "image/jpeg");
+			_memoryCache.Set(nameof(caseImage) + id, caseImage, DateTimeOffset.Now.AddMinutes(10));
+			return File(caseImage, "image/jpeg");
 		}
 
 		// ********************** Private methods **********************************
-
-		private async Task<BadRequest> ValidateCaseAsync(NewCaseDto dto)
-		{
-			var caseDb = await _context.Cases
-				.Select(m => new Case
-				{
-					NationalId = m.NationalId,
-					PhoneNumber = m.PhoneNumber
-				}).FirstOrDefaultAsync(m => m.PhoneNumber == dto.PhoneNumber || m.NationalId == dto.NationalId);
-
-			if (caseDb == null)
-				return null;
-
-			if (caseDb.PhoneNumber == dto.PhoneNumber)
-				return new BadRequest(nameof(dto.PhoneNumber), "Phone number already exists");
-			else
-				return new BadRequest(nameof(dto.NationalId), "National id already exists");
-		}
 
 		private async Task SendNotificationForNewCaseAsync(Case newCase)
 		{
@@ -97,26 +72,23 @@ namespace GraduationProjectAPI.Controllers
 			var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 			var geoLocations = await context.Mediators
 						.Where(m => m.StatusId == (byte)StatusType.Accepted && m.Id != newCase.MediatorId)
-						.Select(m => new GeoLocation
+						.Select(m => new
 						{
-							Id = m.GeoLocation.Id,
-							Latitude = m.GeoLocation.Latitude,
-							Longitude = m.GeoLocation.Longitude
-						}).ToArrayAsync();
+							Id = m.GeoLocationId,
+							GeoCoordinate = new GeoCoordinate(m.GeoLocation.Latitude, m.GeoLocation.Longitude)
+						})
+						.ToArrayAsync();
 
 			var caseCoordinate = new GeoCoordinate(newCase.GeoLocation.Latitude, newCase.GeoLocation.Longitude);
+
 			var closestLocationsId = geoLocations
-				.OrderBy(l => caseCoordinate.GetDistanceTo(new GeoCoordinate(l.Latitude, l.Longitude)))
+				.OrderBy(l => caseCoordinate.GetDistanceTo(l.GeoCoordinate))
 				.Select(l => l.Id)
 				.Take(5);
 
 			var mediatorsToBeNotified = await context.Mediators
 				.Where(m => closestLocationsId.Contains(m.GeoLocationId))
-				.Select(m => new Mediator
-				{
-					Id = m.Id,
-					FirebaseToken = m.FirebaseToken
-				})
+				.Select(m => new { m.Id, m.FirebaseToken })
 				.ToArrayAsync();
 
 			if (!mediatorsToBeNotified.Any())
@@ -133,7 +105,7 @@ namespace GraduationProjectAPI.Controllers
 
 			var notificationDto = new NotificationDto(notification);
 			var handler = new NotificationHandler(notificationDto);
-
+			context.ChangeTracker.AutoDetectChangesEnabled = false;
 			foreach (var mediator in mediatorsToBeNotified)
 			{
 				notification.Id = 0;
@@ -142,6 +114,11 @@ namespace GraduationProjectAPI.Controllers
 				await context.SaveChangesAsync();
 				await handler.SendAsync(mediator.FirebaseToken);
 			}
+		}
+
+		private int GetUserId()
+		{
+			return int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 		}
 	}
 }

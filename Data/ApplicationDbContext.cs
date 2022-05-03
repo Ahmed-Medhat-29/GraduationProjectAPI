@@ -29,6 +29,8 @@ namespace GraduationProjectAPI.Data
 		public DbSet<Complain> Complains { get; set; }
 		public DbSet<CaseReview> CaseReviews { get; set; }
 		public DbSet<MediatorReview> MediatorReviews { get; set; }
+		public DbSet<FAQ> FAQs { get; set; }
+		public DbSet<Chat> Chats { get; set; }
 
 		public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
 		{ }

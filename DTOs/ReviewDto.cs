@@ -1,36 +1,28 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
 using GraduationProjectAPI.Models.Reviews;
+using GraduationProjectAPI.Utilities.StaticStrings;
 
 namespace GraduationProjectAPI.DTOs
 {
 	public class ReviewDto
 	{
-		[Range(1, int.MaxValue)]
-		public int RevieweeId { get; set; }
-
+		public string Name { get; set; }
+		public DateTime DateReviewed { get; set; }
 		public bool IsWorthy { get; set; }
+		public string ImageUrl { get; set; }
 
-		[Required, MaxLength(4000)]
-		public string Description { get; set; }
-
-		public MediatorReview ToMediatorReview()
+		public ReviewDto(MediatorReview review)
 		{
-			return new MediatorReview
-			{
-				RevieweeId = RevieweeId,
-				IsWorthy = IsWorthy,
-				Description = Description
-			};
+			DateReviewed = review.DateReviewed;
+			IsWorthy = review.IsWorthy;
+			ImageUrl = Paths.ProfilePicture(review.ReviewerId);
 		}
 
-		public CaseReview ToCaseReview()
+		public ReviewDto(CaseReview review)
 		{
-			return new CaseReview
-			{
-				CaseId = RevieweeId,
-				IsWorthy = IsWorthy,
-				Description = Description
-			};
+			DateReviewed = review.DateReviewed;
+			IsWorthy = review.IsWorthy;
+			ImageUrl = Paths.ProfilePicture(review.MediatorId);
 		}
 	}
 }

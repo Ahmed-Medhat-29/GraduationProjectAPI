@@ -10,15 +10,15 @@ namespace GraduationProjectAPI.Data.EntitiesConfigurations
 		{
 			builder.HasKey(mr => new { mr.RevieweeId, mr.ReviewerId });
 
-			builder.HasOne(m => m.Reviewee)
+			builder.HasOne(mr => mr.Reviewee)
 				.WithMany(m => m.ReviewsAboutMe)
 				.OnDelete(DeleteBehavior.Restrict);
 
-			builder.HasOne(m => m.Reviewer)
+			builder.HasOne(mr => mr.Reviewer)
 				.WithMany(m => m.ReviewsByMe)
 				.OnDelete(DeleteBehavior.Restrict);
 
-			builder.Property(m => m.DateReviewed)
+			builder.Property(mr => mr.DateReviewed)
 				.HasDefaultValueSql("GETDATE()");
 		}
 	}
