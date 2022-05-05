@@ -1,18 +1,18 @@
 ﻿using System;
-using System.Device.Location;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using GraduationProjectAPI.Data;
-using GraduationProjectAPI.DTOs;
-using GraduationProjectAPI.DTOs.Case;
-using GraduationProjectAPI.DTOs.Chat;
-using GraduationProjectAPI.DTOs.Mediator;
+using GraduationProjectAPI.DTOs.Request;
+using GraduationProjectAPI.DTOs.Request.Chats;
+using GraduationProjectAPI.DTOs.Request.Mediators;
+using GraduationProjectAPI.DTOs.Response;
+using GraduationProjectAPI.DTOs.Response.Chats;
 using GraduationProjectAPI.Enums;
 using GraduationProjectAPI.Models;
-using GraduationProjectAPI.Models.CaseProperties;
 using GraduationProjectAPI.Utilities.AuthenticationConfigurations;
 using GraduationProjectAPI.Utilities.CustomApiResponses;
+using GraduationProjectAPI.Utilities.ExtensionMethods;
 using GraduationProjectAPI.Utilities.General;
 using GraduationProjectAPI.Utilities.StaticStrings;
 using Microsoft.AspNetCore.Authorization;
@@ -23,9 +23,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace GraduationProjectAPI.Controllers
 {
-	[Authorize]
 	[ApiController]
 	[Route("api/[controller]")]
+	[Authorize(Roles = Roles.Mediator)]
 	public class MediatorsController : ControllerBase
 	{
 		private readonly ApplicationDbContext _context;
@@ -39,36 +39,6 @@ namespace GraduationProjectAPI.Controllers
 			_scopeFactory = scopeFactory;
 		}
 
-		[HttpGet("[action]")]
-		public async Task<IActionResult> Home()
-		{
-			var cases = await _context.Cases
-				.Where(c => c.StatusId == (byte)StatusType.Accepted)
-				.Select(c => new CaseElementDto
-				{
-					Id = c.Id,
-					Name = c.Name,
-					Title = c.Title,
-					Priority = c.Priority.Name,
-					Age = ((short)(DateTime.Now - c.DateRequested).TotalDays),
-					FundRaised = 4000,
-				}).ToArrayAsync();
-
-			var images = await _context.Images
-				.Where(i => cases.Select(c => c.Id).Contains(i.CaseId))
-				.Select(i => new Image
-				{
-					Id = i.Id,
-					CaseId = i.CaseId
-				})
-				.ToArrayAsync();
-
-			foreach (var @case in cases)
-				@case.ImagesUrl = images.Where(i => i.CaseId == @case.Id).Select(i => Paths.CaseImage(i.Id)).ToArray();
-
-			return new Success(cases);
-		}
-
 		[AllowAnonymous]
 		[HttpPost("[action]")]
 		public async Task<IActionResult> Register([FromForm] RegisterDto dto)
@@ -76,7 +46,7 @@ namespace GraduationProjectAPI.Controllers
 			var mediator = dto.ToMediator();
 			await _context.Mediators.AddAsync(mediator);
 			await _context.SaveChangesAsync();
-			_ = SendNotificationForNewMediatorAsync(mediator);
+			_ = NewMediatorNotificationAsync(mediator);
 			return new Success();
 		}
 
@@ -84,57 +54,22 @@ namespace GraduationProjectAPI.Controllers
 		[HttpPost("[action]")]
 		public async Task<IActionResult> SignIn([FromForm] SignInRequestDto dto, [FromServices] IAuthenticationTokenGenerator tokenGenerator)
 		{
-			await UpdateFirebaseTokenAsync(dto.PhoneNumber, dto.FirebaseToken);
-
-			return new Success(await _context.Mediators
-				.Select(m => new
-				{
-					Name = m.Name,
-					PhoneNumber = m.PhoneNumber,
-					NationalId = m.NationalId,
-					Job = m.Job,
-					Address = m.Address,
-					BirthDate = m.BirthDate,
-					Bio = m.Bio,
-					Completed = m.Completed,
-					JwtToken = tokenGenerator.Generate(m.Id.ToString()),
-					FirebaseToken = m.FirebaseToken,
-					Gender = ((GenderType)m.GenderId).ToString(),
-					Region = m.Region.Name,
-					SocialStatus = ((SocialStatusType)m.SocialStatusId).ToString(),
-					Locale = ((LocaleType)m.LocaleId).ToString(),
-					Status = ((StatusType)m.StatusId).ToString(),
-					ProfileImageUrl = Paths.ProfilePicture(m.Id),
-					NationalIdImageUrl = Paths.NationalIdImage(m.Id),
-					GeoLocation = new
-					{
-						Longitude = m.GeoLocation.Longitude,
-						Latitude = m.GeoLocation.Latitude,
-						Details = m.GeoLocation.Details
-					}
-				})
-				.FirstAsync(m => m.PhoneNumber == dto.PhoneNumber));
+			var responseDto = await _context.Mediators.SelectSignInResponseDtoAsync(tokenGenerator, dto.PhoneNumber);
+			responseDto.FirebaseToken = dto.FirebaseToken;
+			_ = UpdateFirebaseTokenAsync(dto.PhoneNumber, dto.FirebaseToken);
+			return new Success(responseDto);
 		}
 
 		[HttpGet("[action]")]
 		public async Task<IActionResult> Profile()
 		{
-			return new Success(await _context.Mediators
-				.Where(m => m.Id == GetUserId())
-				.Select(m => new
-				{
-					Name = m.Name,
-					Bio = m.Bio,
-					SocialStatusId = m.SocialStatusId,
-					ImageUrl = Paths.ProfilePicture(m.Id),
-				})
-				.FirstAsync());
+			return new Success(await _context.Mediators.SelectProfileDtoAsync(GetUserId()));
 		}
 
 		[HttpPatch("[action]")]
 		public async Task<IActionResult> Profile([FromForm] CompleteProfileDto dto)
 		{
-			var mediator = new Mediator { Id = GetUserId() };
+			var mediator = new Mediator(GetUserId());
 			_context.Mediators.Attach(mediator);
 			dto.UpdateMediator(mediator);
 			await _context.SaveChangesAsync();
@@ -148,11 +83,7 @@ namespace GraduationProjectAPI.Controllers
 			if (_memoryCache.TryGetValue(nameof(profileImage) + id, out profileImage))
 				return File(profileImage, "image/jpeg");
 
-			profileImage = await _context.Mediators
-				.Where(m => m.Id == id)
-				.Select(m => m.ProfileImage)
-				.FirstOrDefaultAsync();
-
+			profileImage = await _context.Mediators.SelectProfileImageAsync(id);
 			if (profileImage == null)
 				return NotFound(null);
 
@@ -163,11 +94,7 @@ namespace GraduationProjectAPI.Controllers
 		[HttpGet("nationalid-image/{id:min(1)}")]
 		public async Task<IActionResult> NationalIdImage(int id)
 		{
-			var image = await _context.Mediators
-				.Where(m => m.Id == id)
-				.Select(m => m.NationalIdImage)
-				.FirstOrDefaultAsync();
-
+			var image = await _context.Mediators.SelectNationalIdImageAsync(id);
 			return image == null ? NotFound(null) : File(image, "image/jpeg");
 		}
 
@@ -176,30 +103,11 @@ namespace GraduationProjectAPI.Controllers
 		{
 			if (page <= 0) return NotFound(null);
 
-			var notificationsCount = await _context.Notifications
-				.CountAsync(n => n.MediatorId == GetUserId());
-
+			var notificationsCount = await _context.Notifications.CountAsync(n => n.MediatorId == GetUserId());
 			if (notificationsCount <= 0)
 				return new SuccessWithPagination(Array.Empty<NotificationDto>(), new Pagination(page));
 
-			var notifications = await _context.Notifications
-				.Where(n => n.MediatorId == GetUserId())
-				.OrderBy(n => n.DateTime)
-				.Select(n => new
-				{
-					Id = n.Id,
-					Title = n.Title,
-					Body = n.Body,
-					IsRead = n.IsRead,
-					TaskId = n.TaskId,
-					DateTime = n.DateTime,
-					ImageUrl = n.ImageUrl,
-					Type = ((Enums.NotificationType)n.TypeId).ToString()
-				})
-				.Skip(Pagination.MaxPageSize * (page - 1))
-				.Take(Pagination.MaxPageSize)
-				.ToArrayAsync();
-
+			var notifications = await _context.Notifications.SelectNotificationsAsync(GetUserId(), page);
 			var pagination = new Pagination(page, notificationsCount, notifications.Length);
 			if (notifications.Any(n => !n.IsRead))
 				_ = SetNotificationsAsReadAsync(GetUserId());
@@ -217,14 +125,28 @@ namespace GraduationProjectAPI.Controllers
 		}
 
 		[HttpPost("[action]")]
-		public async Task<IActionResult> Message([FromForm] ChatDto dto)
+		public async Task<IActionResult> Message([FromForm] NewChatDto dto)
 		{
 			var chat = dto.ToChat(GetUserId(), Enums.MessageType.Sent);
-			if (chat.ChatId == 0)
-				chat.ChatId = await _context.Chats.MaxAsync(c => c.ChatId) + 1;
+			await _context.Chats.AddAsync(chat);
+			await _context.SaveChangesAsync();
+			return new Success();
+		}
+
+		[AllowAnonymous]
+		[HttpPost("[action]")]
+		public async Task<IActionResult> ReceiveMessage([FromForm] int mediatorId, [FromForm] string message)
+		{
+			var chat = new Chat
+			{
+				MediatorId = mediatorId,
+				Message = message,
+				MessageTypeId = Enums.MessageType.Received
+			};
 
 			await _context.Chats.AddAsync(chat);
 			await _context.SaveChangesAsync();
+			_ = NewMesaageNotificationAsync(chat);
 			return new Success();
 		}
 
@@ -238,30 +160,31 @@ namespace GraduationProjectAPI.Controllers
 
 		// ********************** Private methods **********************************
 
-		private async Task SendNotificationForNewMediatorAsync(Mediator newMediator)
+		private async Task NewMesaageNotificationAsync(Chat chat)
 		{
 			using var scope = _scopeFactory.CreateScope();
 			var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-			var geoLocations = await context.Mediators
-						.Where(m => m.StatusId == (byte)StatusType.Accepted)
-						.Select(m => new
-						{
-							Id = m.GeoLocationId,
-							GeoCoordinate = new GeoCoordinate(m.GeoLocation.Latitude, m.GeoLocation.Longitude)
-						})
+			var firebaseToken = context.Mediators.Where(m => m.Id == chat.MediatorId)
+				.Select(m => m.FirebaseToken)
+				.FirstOrDefault();
+
+			if(string.IsNullOrWhiteSpace(firebaseToken))
+				return;
+
+			var dto = new ChatResponseDto(chat);
+			var handler = new NotificationHandler(dto);
+			await handler.SendAsync(firebaseToken);
+		}
+
+		private async Task NewMediatorNotificationAsync(Mediator newMediator)
+		{
+			using var scope = _scopeFactory.CreateScope();
+			var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+			var mediatorsToBeNotified = await context.Mediators.Take(5)
+						.Where(m => m.StatusId == StatusType.Accepted)
+						.OrderBy(m => m.GeoLocation.Location.Distance(newMediator.GeoLocation.Location))
+						.Select(m => new { m.Id, m.FirebaseToken })
 						.ToArrayAsync();
-
-			var mediatorCoordinate = new GeoCoordinate(newMediator.GeoLocation.Latitude, newMediator.GeoLocation.Longitude);
-
-			var closestLocationsId = geoLocations
-				.OrderBy(l => mediatorCoordinate.GetDistanceTo(l.GeoCoordinate))
-				.Select(l => l.Id)
-				.Take(5);
-
-			var mediatorsToBeNotified = await context.Mediators
-				.Where(m => closestLocationsId.Contains(m.GeoLocationId))
-				.Select(m => new { m.Id, m.FirebaseToken })
-				.ToArrayAsync();
 
 			if (!mediatorsToBeNotified.Any())
 				return;
@@ -271,7 +194,7 @@ namespace GraduationProjectAPI.Controllers
 				Title = "New Mediator",
 				Body = $"<bold>{newMediator.Name}</bold> has registered, Check him out!!!",
 				TaskId = newMediator.Id,
-				TypeId = (byte)Enums.NotificationType.Mediator,
+				TypeId = Enums.NotificationType.Mediator,
 				ImageUrl = Paths.ProfilePicture(newMediator.Id)
 			};
 
@@ -317,16 +240,18 @@ namespace GraduationProjectAPI.Controllers
 
 		private async Task UpdateFirebaseTokenAsync(string phoneNumber, string token)
 		{
-			var mediator = await _context.Mediators
+			using var scope = _scopeFactory.CreateScope();
+			var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+			var mediator = await context.Mediators
 				.Where(m => m.PhoneNumber == phoneNumber && m.FirebaseToken != token)
 				.Select(m => new Mediator { Id = m.Id })
 				.FirstOrDefaultAsync();
 
 			if (mediator != null)
 			{
-				_context.Mediators.Attach(mediator);
+				context.Mediators.Attach(mediator);
 				mediator.FirebaseToken = token;
-				await _context.SaveChangesAsync();
+				await context.SaveChangesAsync();
 			}
 		}
 	}

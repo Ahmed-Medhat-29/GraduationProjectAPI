@@ -1,5 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+using NetTopologySuite.Geometries;
 
 namespace GraduationProjectAPI.Models.Location
 {
@@ -7,25 +7,10 @@ namespace GraduationProjectAPI.Models.Location
 	{
 		public int Id { get; set; }
 
-		[Column(TypeName = "decimal(9,6)")]
-		public double Longitude { get; set; }
-
-		[Column(TypeName = "decimal(8,6)")]
-		public double Latitude { get; set; }
+		[Required]
+		public Point Location { get; set; }
 
 		[Required, MaxLength(4000)]
 		public string Details { get; set; }
-
-		public GeoLocation()
-		{
-
-		}
-
-		public GeoLocation(GeoLocation geoLocation)
-		{
-			Id = geoLocation.Id;
-			Longitude = geoLocation.Longitude;
-			Latitude = geoLocation.Latitude;
-		}
 	}
 }

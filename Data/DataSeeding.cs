@@ -12,8 +12,8 @@ namespace GraduationProjectAPI.Data
 		{
 			builder.Entity<Gender>().HasData(StaticValues.Genders());
 			builder.Entity<Status>().HasData(StaticValues.Status());
-			builder.Entity<Locale>().HasData(StaticValues.Locales());
 			builder.Entity<SocialStatus>().HasData(StaticValues.SocialStatus());
+			builder.Entity<Locale>().HasData(StaticValues.Locales());
 			builder.Entity<Period>().HasData(StaticValues.Periods());
 			builder.Entity<Priority>().HasData(StaticValues.Priorities());
 			builder.Entity<Relationship>().HasData(StaticValues.Relationships());

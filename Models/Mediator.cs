@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using GraduationProjectAPI.Enums;
 using GraduationProjectAPI.Models.Location;
 using GraduationProjectAPI.Models.Reviews;
 using GraduationProjectAPI.Models.Shared;
@@ -55,20 +56,30 @@ namespace GraduationProjectAPI.Models
 		public int? RegionId { get; set; }
 
 		public Gender Gender { get; set; }
-		public int GenderId { get; set; }
+		public GenderType GenderId { get; set; }
 
 		public SocialStatus SocialStatus { get; set; }
-		public byte SocialStatusId { get; set; }
+		public SocialStatusType SocialStatusId { get; set; }
 
 		public Status Status { get; set; }
-		public byte StatusId { get; set; }
+		public StatusType StatusId { get; set; }
 
 		public Locale Locale { get; set; }
-		public byte LocaleId { get; set; }
+		public LocaleType LocaleId { get; set; }
 
 		public ICollection<MediatorReview> ReviewsAboutMe;
 		public ICollection<MediatorReview> ReviewsByMe;
 		public ICollection<Notification> Notifications { get; set; }
 		public ICollection<Case> CasesAdded { get; set; }
+
+		public Mediator()
+		{
+
+		}
+
+		public Mediator(int id)
+		{
+			Id = id;
+		}
 	}
 }

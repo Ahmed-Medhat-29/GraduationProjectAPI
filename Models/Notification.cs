@@ -26,7 +26,7 @@ namespace GraduationProjectAPI.Models
 		public int TaskId { get; set; }
 
 		public NotificationType Type { get; set; }
-		public byte TypeId { get; set; }
+		public Enums.NotificationType TypeId { get; set; }
 
 		public Mediator Mediator { get; set; }
 		public int MediatorId { get; set; }

@@ -19,10 +19,10 @@ namespace GraduationProjectAPI.Controllers
 			_context = context;
 		}
 
-		[HttpGet("[action]/{id}")]
-		public async Task<IActionResult> GetMediator(uint id)
+		[HttpGet("[action]/{id:min(1)}")]
+		public async Task<IActionResult> GetMediator(int id)
 		{
-			var mediator = await _context.Mediators.AsNoTrackingWithIdentityResolution()
+			var mediator = await _context.Mediators.AsNoTracking()
 				.Include(m => m.Status)
 				.FirstOrDefaultAsync(m => m.Id == id);
 
@@ -40,18 +40,14 @@ namespace GraduationProjectAPI.Controllers
 				.ToArrayAsync());
 		}
 
-		[HttpPost("[action]/{id}")]
-		public async Task<IActionResult> AcceptMediator(uint id)
+		[HttpPost("[action]/{id:min(1)}")]
+		public async Task<IActionResult> AcceptMediator(int id)
 		{
 			var mediator = await _context.Mediators.FirstOrDefaultAsync(m => m.Id == id);
 			if (mediator == null)
-				return new BadRequest($"Mediator with id: {id} could not be found");
+				return NotFound($"Mediator with id: {id} could not be found");
 
-			mediator.StatusId = await _context.Status
-				.Where(s => s.Name == StatusType.Accepted.ToString())
-				.Select(s => s.Id)
-				.FirstAsync();
-
+			mediator.StatusId = StatusType.Accepted;
 			await _context.SaveChangesAsync();
 			return new Success();
 		}
@@ -59,27 +55,29 @@ namespace GraduationProjectAPI.Controllers
 		[HttpPost("[action]")]
 		public async Task<IActionResult> AcceptMediators()
 		{
-			var mediators = await _context.Mediators.ToArrayAsync();
-			if (mediators == null || mediators.Count() <= 0)
+			var mediators = await _context.Mediators
+				.Where(m => m.StatusId == StatusType.Pending || m.StatusId == StatusType.Submitted)
+				.ToArrayAsync();
+
+			if (!mediators.Any())
 				return new Success();
 
-			var acceptedStatusId = await _context.Status.Where(s => s.Name == StatusType.Accepted.ToString()).Select(s => s.Id).FirstAsync();
 			foreach (var mediator in mediators)
-				mediator.StatusId = acceptedStatusId;
+				mediator.StatusId = StatusType.Accepted;
 
 			await _context.SaveChangesAsync();
 			return new Success();
 		}
 
-		[HttpGet("[action]/{id}")]
-		public async Task<IActionResult> GetCase(uint id)
+		[HttpGet("[action]/{id:min(1)}")]
+		public async Task<IActionResult> GetCase(int id)
 		{
-			var @case = await _context.Cases.AsNoTrackingWithIdentityResolution()
+			var @case = await _context.Cases.AsNoTracking()
 				.Include(m => m.Status)
 				.FirstOrDefaultAsync(m => m.Id == id);
 
 			if (@case == null)
-				return new BadRequest($"Case with id: {id} could not be found");
+				return NotFound($"Case with id: {id} could not be found");
 
 			return new Success(@case);
 		}
@@ -92,18 +90,14 @@ namespace GraduationProjectAPI.Controllers
 				.ToArrayAsync());
 		}
 
-		[HttpPost("[action]/{id}")]
-		public async Task<IActionResult> AcceptCase(uint id)
+		[HttpPost("[action]/{id:min(1)}")]
+		public async Task<IActionResult> AcceptCase(int id)
 		{
 			var @case = await _context.Cases.FirstOrDefaultAsync(m => m.Id == id);
 			if (@case == null)
-				return new BadRequest($"Case with id: {id} could not be found");
+				return NotFound($"Case with id: {id} could not be found");
 
-			@case.StatusId = await _context.Status
-				.Where(s => s.Name == StatusType.Accepted.ToString())
-				.Select(s => s.Id)
-				.FirstAsync();
-
+			@case.StatusId = StatusType.Accepted;
 			await _context.SaveChangesAsync();
 			return new Success();
 		}
@@ -111,13 +105,15 @@ namespace GraduationProjectAPI.Controllers
 		[HttpPost("[action]")]
 		public async Task<IActionResult> AcceptCases()
 		{
-			var cases = await _context.Cases.ToArrayAsync();
-			if (cases == null || cases.Count() <= 0)
+			var cases = await _context.Cases
+				.Where(m => m.StatusId == StatusType.Pending || m.StatusId == StatusType.Submitted)
+				.ToArrayAsync();
+
+			if (!cases.Any())
 				return new Success();
 
-			var acceptedStatusId = await _context.Status.Where(s => s.Name == StatusType.Accepted.ToString()).Select(s => s.Id).FirstAsync();
 			foreach (var @case in cases)
-				@case.StatusId = acceptedStatusId;
+				@case.StatusId = StatusType.Accepted;
 
 			await _context.SaveChangesAsync();
 			return new Success();

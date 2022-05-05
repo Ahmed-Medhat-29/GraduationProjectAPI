@@ -19,18 +19,20 @@ namespace GraduationProjectAPI.Utilities.AuthenticationConfigurations
 			_config = config;
 		}
 
-		public string Generate(string id)
+		public string Generate(string id, string role)
 		{
 			return SetToken(new Claim[]
 			{
-				new Claim(ClaimTypes.NameIdentifier, id)
+				new Claim(ClaimTypes.NameIdentifier, id),
+				new Claim(ClaimTypes.Role, role)
 			});
 		}
 
-		public string Generate(string id, IDictionary<string, string> data)
+		public string Generate(string id, string role, IDictionary<string, string> data)
 		{
 			var claims = new List<Claim>();
 			claims.Add(new Claim(ClaimTypes.NameIdentifier, id));
+			claims.Add(new Claim(ClaimTypes.Role, role));
 
 			if (data != null)
 				claims.AddRange(data.Select(d => new Claim(d.Key, d.Value)));

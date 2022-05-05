@@ -2,17 +2,16 @@
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
-using GraduationProjectAPI.DTOs;
 
 namespace GraduationProjectAPI.Utilities.General
 {
 	public class NotificationHandler
 	{
-		private readonly NotificationDto _notification;
+		private readonly object _notification;
 
-		public NotificationHandler(NotificationDto notificationDto)
+		public NotificationHandler(object notification)
 		{
-			_notification = notificationDto;
+			_notification = notification;
 		}
 
 		public async Task SendAsync(string token)

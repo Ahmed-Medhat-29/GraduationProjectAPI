@@ -4,10 +4,11 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using GraduationProjectAPI.Data;
-using GraduationProjectAPI.DTOs;
+using GraduationProjectAPI.DTOs.Request;
 using GraduationProjectAPI.Enums;
 using GraduationProjectAPI.Models;
 using GraduationProjectAPI.Utilities.CustomApiResponses;
+using GraduationProjectAPI.Utilities.ExtensionMethods;
 using GraduationProjectAPI.Utilities.General;
 using GraduationProjectAPI.Utilities.StaticStrings;
 using Microsoft.AspNetCore.Authorization;
@@ -17,9 +18,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace GraduationProjectAPI.Controllers
 {
-	[Authorize]
 	[ApiController]
 	[Route("api/[controller]")]
+	[Authorize(Roles = Roles.Mediator)]
 	public class TasksController : ControllerBase
 	{
 		private readonly ApplicationDbContext _context;
@@ -37,14 +38,14 @@ namespace GraduationProjectAPI.Controllers
 			if (page <= 0) return NotFound(null);
 
 			var pendingMediatorsCount = await _context.Mediators
-				.Where(m => m.StatusId == (byte)StatusType.Pending && !m.ReviewsAboutMe.Any(r => r.ReviewerId == GetUserId()))
+				.Where(m => m.StatusId == StatusType.Pending && !m.ReviewsAboutMe.Any(r => r.ReviewerId == GetUserId()))
 				.CountAsync();
 
 			if (pendingMediatorsCount <= 0)
 				return new SuccessWithPagination(Array.Empty<object>(), new Pagination(page));
 
 			var pendingMediators = await _context.Mediators
-				.Where(m => m.StatusId == (byte)StatusType.Pending && !m.ReviewsAboutMe.Any(r => r.ReviewerId == GetUserId()))
+				.Where(m => m.StatusId == StatusType.Pending && !m.ReviewsAboutMe.Any(r => r.ReviewerId == GetUserId()))
 				.OrderBy(m => m.DateRegistered)
 				.Select(m => new
 				{
@@ -67,7 +68,7 @@ namespace GraduationProjectAPI.Controllers
 		{
 			var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 			var mediator = await _context.Mediators
-				.Where(m => m.Id == id && m.StatusId == (byte)StatusType.Pending && !m.ReviewsAboutMe.Any(r => r.ReviewerId == userId))
+				.Where(m => m.Id == id && m.StatusId == StatusType.Pending && !m.ReviewsAboutMe.Any(r => r.ReviewerId == userId))
 				.Select(m => new
 				{
 					Id = m.Id,
@@ -97,14 +98,14 @@ namespace GraduationProjectAPI.Controllers
 			if (page <= 0) return NotFound(null);
 
 			var pendingCasesCount = await _context.Cases
-				.Where(c => c.StatusId == (byte)StatusType.Pending && c.MediatorId != GetUserId() && !c.CaseReviews.Any(r => r.MediatorId == GetUserId()))
+				.Where(c => c.StatusId == StatusType.Pending && c.MediatorId != GetUserId() && !c.CaseReviews.Any(r => r.MediatorId == GetUserId()))
 				.CountAsync();
 
 			if (pendingCasesCount <= 0)
 				return new SuccessWithPagination(Array.Empty<object>(), new Pagination(page));
 
 			var pendingCases = await _context.Cases
-				.Where(c => c.StatusId == (byte)StatusType.Pending && c.MediatorId != GetUserId() && !c.CaseReviews.Any(r => r.MediatorId == GetUserId()))
+				.Where(c => c.StatusId == StatusType.Pending && c.MediatorId != GetUserId() && !c.CaseReviews.Any(r => r.MediatorId == GetUserId()))
 				.OrderBy(c => c.DateRequested)
 				.Select(c => new
 				{
@@ -127,7 +128,7 @@ namespace GraduationProjectAPI.Controllers
 		public async Task<IActionResult> PendingCase(int id)
 		{
 			var @case = await _context.Cases
-				.Where(c => c.Id == id && c.StatusId == (byte)StatusType.Pending && c.MediatorId != GetUserId() && !c.CaseReviews.Any(r => r.MediatorId == GetUserId()))
+				.Where(c => c.Id == id && c.StatusId == StatusType.Pending && c.MediatorId != GetUserId() && !c.CaseReviews.Any(r => r.MediatorId == GetUserId()))
 				.Select(c => new
 				{
 					Id = c.Id,
@@ -170,7 +171,7 @@ namespace GraduationProjectAPI.Controllers
 			if (dto.RevieweeId == GetUserId())
 				return new BadRequest("You can't review yourself");
 
-			if (!await _context.Mediators.AnyAsync(m => m.Id == dto.RevieweeId && m.StatusId == (byte)StatusType.Pending))
+			if (!await _context.Mediators.AnyAsync(m => m.Id == dto.RevieweeId && m.StatusId == StatusType.Pending))
 				return new BadRequest("No pending mediator with such id found");
 
 			if (await _context.MediatorReviews.AnyAsync(m => m.RevieweeId == dto.RevieweeId && m.ReviewerId == GetUserId()))
@@ -226,9 +227,9 @@ namespace GraduationProjectAPI.Controllers
 			context.Mediators.Attach(mediator);
 
 			if (numberOfWorthy >= 3)
-				mediator.StatusId = (byte)StatusType.Submitted;
+				mediator.StatusId = StatusType.Submitted;
 			else
-				mediator.StatusId = (byte)StatusType.Rejected;
+				mediator.StatusId = StatusType.Rejected;
 
 			await context.SaveChangesAsync();
 		}
@@ -257,9 +258,9 @@ namespace GraduationProjectAPI.Controllers
 			context.Cases.Attach(@case);
 
 			if (numberOfWorthy >= 3)
-				@case.StatusId = (byte)StatusType.Submitted;
+				@case.StatusId = StatusType.Submitted;
 			else
-				@case.StatusId = (byte)StatusType.Rejected;
+				@case.StatusId = StatusType.Rejected;
 
 			await context.SaveChangesAsync();
 		}

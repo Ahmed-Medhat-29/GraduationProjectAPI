@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using GraduationProjectAPI.Enums;
 using GraduationProjectAPI.Models.CaseProperties;
 using GraduationProjectAPI.Models.Location;
 using GraduationProjectAPI.Models.Reviews;
@@ -50,34 +51,34 @@ namespace GraduationProjectAPI.Models
 		public string Story { get; set; }
 
 		public Period Period { get; set; }
-		public byte PeriodId { get; set; }
+		public PeriodType PeriodId { get; set; }
 
 		public Mediator Mediator { get; set; }
 		public int MediatorId { get; set; }
 
 		public Category Category { get; set; }
-		public byte CategoryId { get; set; }
+		public int CategoryId { get; set; }
 
 		public Relationship Relationship { get; set; }
-		public byte RelationshipId { get; set; }
+		public RelationshipType RelationshipId { get; set; }
 
 		public Priority Priority { get; set; }
-		public byte PriorityId { get; set; }
+		public PriorityType PriorityId { get; set; }
 
 		public Gender Gender { get; set; }
-		public byte GenderId { get; set; }
+		public GenderType GenderId { get; set; }
 
 		public GeoLocation GeoLocation { get; set; }
 		public int GeoLocationId { get; set; }
 
 		public SocialStatus SocialStatus { get; set; }
-		public byte SocialStatusId { get; set; }
+		public SocialStatusType SocialStatusId { get; set; }
 
 		public Region Region { get; set; }
 		public int RegionId { get; set; }
 
 		public Status Status { get; set; }
-		public byte StatusId { get; set; }
+		public StatusType StatusId { get; set; }
 
 		public ICollection<CaseReview> CaseReviews { get; set; }
 		public ICollection<Image> Images { get; set; }

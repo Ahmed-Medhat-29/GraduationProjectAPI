@@ -5,7 +5,7 @@ namespace GraduationProjectAPI.Models.CaseProperties
 {
 	public class Category
 	{
-		public byte Id { get; set; }
+		public int Id { get; set; }
 
 		[Required, MaxLength(50), Column(TypeName = "varchar")]
 		public string Name { get; set; }

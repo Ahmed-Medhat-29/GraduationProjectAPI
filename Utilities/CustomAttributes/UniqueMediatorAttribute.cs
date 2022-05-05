@@ -2,7 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using GraduationProjectAPI.Data;
-using GraduationProjectAPI.DTOs.Mediator;
+using GraduationProjectAPI.DTOs.Request.Mediators;
 
 namespace GraduationProjectAPI.Utilities.CustomAttributes
 {

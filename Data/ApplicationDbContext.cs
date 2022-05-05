@@ -26,7 +26,6 @@ namespace GraduationProjectAPI.Data
 		public DbSet<Period> Periods { get; set; }
 		public DbSet<Priority> Priorities { get; set; }
 		public DbSet<Relationship> Relationships { get; set; }
-		public DbSet<Complain> Complains { get; set; }
 		public DbSet<CaseReview> CaseReviews { get; set; }
 		public DbSet<MediatorReview> MediatorReviews { get; set; }
 		public DbSet<FAQ> FAQs { get; set; }

@@ -2,7 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using GraduationProjectAPI.Data;
-using GraduationProjectAPI.DTOs.Case;
+using GraduationProjectAPI.DTOs.Request.Cases;
 
 namespace GraduationProjectAPI.Utilities.CustomAttributes
 {

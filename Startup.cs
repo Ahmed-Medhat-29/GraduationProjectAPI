@@ -25,7 +25,7 @@ namespace GraduationProjectAPI
 		public void ConfigureServices(IServiceCollection services)
 		{
 			services.AddDbContextPool<ApplicationDbContext>(options =>
-				options.UseSqlServer(_config.GetConnectionString("DefaultConnection")));
+				options.UseSqlServer(_config.GetConnectionString("DefaultConnection"), o => o.UseNetTopologySuite()));
 
 			services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 				.AddJwtBearer(options =>
@@ -50,7 +50,7 @@ namespace GraduationProjectAPI
 					{
 						options.JsonSerializerOptions.DictionaryKeyPolicy = JsonNamingPolicy.CamelCase;
 						options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-						options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+						options.JsonSerializerOptions.PropertyNameCaseInsensitive = false;
 					});
 
 			services.AddScoped<IAuthenticationTokenGenerator, JwtGenerator>();
@@ -61,7 +61,7 @@ namespace GraduationProjectAPI
 		public void Configure(IApplicationBuilder app)
 		{
 			app.UseDeveloperExceptionPage();
-			app.UseStaticFiles();
+			//app.UseStaticFiles();
 			app.Use(async (context, next) =>
 			{
 				//new Task(() =>
