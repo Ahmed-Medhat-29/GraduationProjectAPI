@@ -37,18 +37,13 @@ namespace GraduationProjectAPI.Controllers
 		{
 			if (page <= 0) return NotFound(null);
 
-			var urgentCasesCount = await _context.Cases
-				.Where(c => c.PriorityId == PriorityType.Urgent && c.StatusId == StatusType.Accepted)
-				.CountAsync();
-
+			var urgentCasesCount = await _context.Cases.CountAsync(c => c.PriorityId == PriorityType.Urgent && c.StatusId == StatusType.Accepted);
 			if (urgentCasesCount <= 0)
 				return new SuccessWithPagination(Array.Empty<object>(), new Pagination(page));
 
 			var urgentCases = await _context.Cases
 				.Where(c => c.PriorityId == PriorityType.Urgent && c.StatusId == StatusType.Accepted)
-				.Skip(Pagination.MaxPageSize * (page - 1))
-				.Take(Pagination.MaxPageSize)
-				.SelectCaseElementDtoAsync();
+				.SelectCaseElementDtoAsync(page);
 
 			return new SuccessWithPagination(urgentCases, new Pagination(page, urgentCasesCount, urgentCases.Length));
 		}
@@ -58,18 +53,13 @@ namespace GraduationProjectAPI.Controllers
 		{
 			if (page <= 0) return NotFound(null);
 
-			var myCasesCount = await _context.Cases
-				.Where(c => c.MediatorId == GetUserId())
-				.CountAsync();
-
+			var myCasesCount = await _context.Cases.CountAsync(c => c.MediatorId == GetUserId());
 			if (myCasesCount <= 0)
 				return new SuccessWithPagination(Array.Empty<object>(), new Pagination(page));
 
 			var myCases = await _context.Cases
 				.Where(c => c.MediatorId == GetUserId())
-				.Skip(Pagination.MaxPageSize * (page - 1))
-				.Take(Pagination.MaxPageSize)
-				.SelectCaseElementDtoAsync();
+				.SelectCaseElementDtoAsync(page);
 
 			return new SuccessWithPagination(myCases, new Pagination(page, myCasesCount, myCases.Length));
 		}
@@ -82,7 +72,7 @@ namespace GraduationProjectAPI.Controllers
 			var userRegionId = await _context.Mediators
 				.Where(m => m.Id == GetUserId())
 				.Select(m => m.RegionId)
-				.FirstAsync();
+				.FirstOrDefaultAsync();
 
 			if (userRegionId == null)
 				return new BadRequest("Please complete your profile and choose your region");
@@ -93,9 +83,7 @@ namespace GraduationProjectAPI.Controllers
 
 			var areaCases = await _context.Cases
 				.Where(c => c.StatusId == StatusType.Accepted && c.RegionId == userRegionId)
-				.Skip(Pagination.MaxPageSize * (page - 1))
-				.Take(Pagination.MaxPageSize)
-				.SelectCaseElementDtoAsync();
+				.SelectCaseElementDtoAsync(page);
 
 			return new SuccessWithPagination(areaCases, new Pagination(page, areaCasesCount, areaCases.Length));
 		}
@@ -103,8 +91,7 @@ namespace GraduationProjectAPI.Controllers
 		[HttpGet("{id:min(1)}")]
 		public async Task<IActionResult> GetCase(int id)
 		{
-			var @case = await _context.Cases
-				.SelectCaseInfoDtoAsync(id);
+			var @case = await _context.Cases.SelectCaseInfoDtoAsync(id);
 
 			if (@case == null)
 				return NotFound(null);
@@ -134,7 +121,7 @@ namespace GraduationProjectAPI.Controllers
 			return image == null ? NotFound(null) : File(image, "image/jpeg");
 		}
 
-		// ********************** Private methods **********************************
+		// ************************ Private methods ************************
 
 		private async Task SendNotificationForNewCaseAsync(Case newCase)
 		{

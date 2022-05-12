@@ -81,6 +81,7 @@ namespace GraduationProjectAPI.Models
 		public StatusType StatusId { get; set; }
 
 		public ICollection<CaseReview> CaseReviews { get; set; }
+		public ICollection<CasePayment> CasePayments { get; set; }
 		public ICollection<Image> Images { get; set; }
 	}
 }

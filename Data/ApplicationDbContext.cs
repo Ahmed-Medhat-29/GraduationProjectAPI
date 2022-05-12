@@ -30,6 +30,7 @@ namespace GraduationProjectAPI.Data
 		public DbSet<MediatorReview> MediatorReviews { get; set; }
 		public DbSet<FAQ> FAQs { get; set; }
 		public DbSet<Chat> Chats { get; set; }
+		public DbSet<CasePayment> CasePayments { get; set; }
 
 		public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
 		{ }

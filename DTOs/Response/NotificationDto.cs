@@ -1,5 +1,4 @@
 ﻿using System;
-using GraduationProjectAPI.Enums;
 
 namespace GraduationProjectAPI.DTOs.Response
 {
@@ -28,7 +27,7 @@ namespace GraduationProjectAPI.DTOs.Response
 			TaskId = notification.TaskId;
 			DateTime = notification.DateTime;
 			ImageUrl = notification.ImageUrl;
-			Type = ((NotificationType)notification.TypeId).ToString();
+			Type = notification.TypeId.ToString();
 		}
 	}
 }

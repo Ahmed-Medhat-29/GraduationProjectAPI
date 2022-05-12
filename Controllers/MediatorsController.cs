@@ -4,10 +4,8 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using GraduationProjectAPI.Data;
 using GraduationProjectAPI.DTOs.Request;
-using GraduationProjectAPI.DTOs.Request.Chats;
 using GraduationProjectAPI.DTOs.Request.Mediators;
 using GraduationProjectAPI.DTOs.Response;
-using GraduationProjectAPI.DTOs.Response.Chats;
 using GraduationProjectAPI.Enums;
 using GraduationProjectAPI.Models;
 using GraduationProjectAPI.Utilities.AuthenticationConfigurations;
@@ -18,7 +16,6 @@ using GraduationProjectAPI.Utilities.StaticStrings;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace GraduationProjectAPI.Controllers
@@ -29,13 +26,11 @@ namespace GraduationProjectAPI.Controllers
 	public class MediatorsController : ControllerBase
 	{
 		private readonly ApplicationDbContext _context;
-		private readonly IMemoryCache _memoryCache;
 		private readonly IServiceScopeFactory _scopeFactory;
 
-		public MediatorsController(ApplicationDbContext context, IMemoryCache memoryCache, IServiceScopeFactory scopeFactory)
+		public MediatorsController(ApplicationDbContext context, IServiceScopeFactory scopeFactory)
 		{
 			_context = context;
-			_memoryCache = memoryCache;
 			_scopeFactory = scopeFactory;
 		}
 
@@ -79,16 +74,8 @@ namespace GraduationProjectAPI.Controllers
 		[HttpGet("profile-image/{id:min(1)}")]
 		public async Task<IActionResult> ProfileImage(int id)
 		{
-			byte[] profileImage;
-			if (_memoryCache.TryGetValue(nameof(profileImage) + id, out profileImage))
-				return File(profileImage, "image/jpeg");
-
-			profileImage = await _context.Mediators.SelectProfileImageAsync(id);
-			if (profileImage == null)
-				return NotFound(null);
-
-			_memoryCache.Set(nameof(profileImage) + id, profileImage, DateTimeOffset.Now.AddMinutes(10));
-			return File(profileImage, "image/jpeg");
+			var profileImage = await _context.Mediators.SelectProfileImageAsync(id);
+			return profileImage == null ? NotFound(null) : File(profileImage, "image/jpeg");
 		}
 
 		[HttpGet("nationalid-image/{id:min(1)}")]
@@ -105,7 +92,7 @@ namespace GraduationProjectAPI.Controllers
 
 			var notificationsCount = await _context.Notifications.CountAsync(n => n.MediatorId == GetUserId());
 			if (notificationsCount <= 0)
-				return new SuccessWithPagination(Array.Empty<NotificationDto>(), new Pagination(page));
+				return new SuccessWithPagination(Array.Empty<object>(), new Pagination(page));
 
 			var notifications = await _context.Notifications.SelectNotificationsAsync(GetUserId(), page);
 			var pagination = new Pagination(page, notificationsCount, notifications.Length);
@@ -116,65 +103,14 @@ namespace GraduationProjectAPI.Controllers
 		}
 
 		[AllowAnonymous]
-		[HttpGet("[action]")]
-		public async Task<IActionResult> FAQ()
-		{
-			return new Success(await _context.FAQs
-				.Select(f => new { f.Title, f.Description })
-				.ToArrayAsync());
-		}
-
 		[HttpPost("[action]")]
-		public async Task<IActionResult> Message([FromForm] NewChatDto dto)
+		public async Task<IActionResult> ValidateNumber([FromForm] PhoneNumberDto numberDto)
 		{
-			var chat = dto.ToChat(GetUserId(), Enums.MessageType.Sent);
-			await _context.Chats.AddAsync(chat);
-			await _context.SaveChangesAsync();
-			return new Success();
-		}
-
-		[AllowAnonymous]
-		[HttpPost("[action]")]
-		public async Task<IActionResult> ReceiveMessage([FromForm] int mediatorId, [FromForm] string message)
-		{
-			var chat = new Chat
-			{
-				MediatorId = mediatorId,
-				Message = message,
-				MessageTypeId = Enums.MessageType.Received
-			};
-
-			await _context.Chats.AddAsync(chat);
-			await _context.SaveChangesAsync();
-			_ = NewMesaageNotificationAsync(chat);
-			return new Success();
-		}
-
-		[AllowAnonymous]
-		[HttpPost("[action]")]
-		public async Task<IActionResult> ValidateNumber([FromForm] PhoneNumberDto numberDTO)
-		{
-			var isNumberExists = await _context.Mediators.AnyAsync(m => m.PhoneNumber == numberDTO.PhoneNumber);
+			var isNumberExists = await _context.Mediators.AnyAsync(m => m.PhoneNumber == numberDto.PhoneNumber);
 			return isNumberExists ? new BadRequest("Number is registered already") : new Success();
 		}
 
-		// ********************** Private methods **********************************
-
-		private async Task NewMesaageNotificationAsync(Chat chat)
-		{
-			using var scope = _scopeFactory.CreateScope();
-			var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-			var firebaseToken = context.Mediators.Where(m => m.Id == chat.MediatorId)
-				.Select(m => m.FirebaseToken)
-				.FirstOrDefault();
-
-			if(string.IsNullOrWhiteSpace(firebaseToken))
-				return;
-
-			var dto = new ChatResponseDto(chat);
-			var handler = new NotificationHandler(dto);
-			await handler.SendAsync(firebaseToken);
-		}
+		// ************************ Private methods ************************
 
 		private async Task NewMediatorNotificationAsync(Mediator newMediator)
 		{
@@ -218,33 +154,13 @@ namespace GraduationProjectAPI.Controllers
 			await context.Database.ExecuteSqlRawAsync($"UPDATE [{nameof(context.Notifications)}] SET [{nameof(Notification.IsRead)}] = 1 WHERE [{nameof(Notification.MediatorId)}] = {mediatorId} AND [{nameof(Notification.IsRead)}] = 0;");
 		}
 
-		[HttpGet("[action]")]
-		public async Task<IActionResult> Notify([FromForm] string token, [FromForm] string title, [FromForm] string body)
-		{
-			var notification = new Notification
-			{
-				Title = title,
-				Body = body
-			};
-
-			var notificationDto = new NotificationDto(notification);
-			var handler = new NotificationHandler(notificationDto);
-			await handler.SendAsync(token);
-			return new Success();
-		}
-
-		private int GetUserId()
-		{
-			return int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-		}
-
 		private async Task UpdateFirebaseTokenAsync(string phoneNumber, string token)
 		{
 			using var scope = _scopeFactory.CreateScope();
 			var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 			var mediator = await context.Mediators
 				.Where(m => m.PhoneNumber == phoneNumber && m.FirebaseToken != token)
-				.Select(m => new Mediator { Id = m.Id })
+				.Select(m => new Mediator(m.Id))
 				.FirstOrDefaultAsync();
 
 			if (mediator != null)
@@ -253,6 +169,11 @@ namespace GraduationProjectAPI.Controllers
 				mediator.FirebaseToken = token;
 				await context.SaveChangesAsync();
 			}
+		}
+
+		private int GetUserId()
+		{
+			return int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 		}
 	}
 }

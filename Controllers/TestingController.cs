@@ -1,8 +1,11 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
 using GraduationProjectAPI.Data;
+using GraduationProjectAPI.DTOs.Response;
 using GraduationProjectAPI.Enums;
+using GraduationProjectAPI.Models;
 using GraduationProjectAPI.Utilities.CustomApiResponses;
+using GraduationProjectAPI.Utilities.General;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -116,6 +119,20 @@ namespace GraduationProjectAPI.Controllers
 				@case.StatusId = StatusType.Accepted;
 
 			await _context.SaveChangesAsync();
+			return new Success();
+		}
+
+		[HttpPost("[action]")]
+		public async Task<IActionResult> Notify([FromForm] string token, [FromForm] string title, [FromForm] string body)
+		{
+			var notification = new Notification
+			{
+				Title = title,
+				Body = body
+			};
+
+			var handler = new NotificationHandler(new NotificationDto(notification));
+			await handler.SendAsync(token);
 			return new Success();
 		}
 	}

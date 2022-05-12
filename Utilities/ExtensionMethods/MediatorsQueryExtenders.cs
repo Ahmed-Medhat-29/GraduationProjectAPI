@@ -1,9 +1,12 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
 using GraduationProjectAPI.DTOs.Common;
+using GraduationProjectAPI.DTOs.Response;
 using GraduationProjectAPI.DTOs.Response.Mediators;
+using GraduationProjectAPI.Enums;
 using GraduationProjectAPI.Models;
 using GraduationProjectAPI.Utilities.AuthenticationConfigurations;
+using GraduationProjectAPI.Utilities.General;
 using GraduationProjectAPI.Utilities.StaticStrings;
 using Microsoft.EntityFrameworkCore;
 
@@ -19,6 +22,7 @@ namespace GraduationProjectAPI.Utilities.ExtensionMethods
 					Name = m.Name,
 					PhoneNumber = m.PhoneNumber,
 					NationalId = m.NationalId,
+					Balance = m.Balance,
 					Job = m.Job,
 					Address = m.Address,
 					BirthDate = m.BirthDate,
@@ -49,6 +53,7 @@ namespace GraduationProjectAPI.Utilities.ExtensionMethods
 				.Select(m => new ProfileDto
 				{
 					Name = m.Name,
+					Balance = m.Balance,
 					Bio = m.Bio,
 					SocialStatusId = m.SocialStatusId,
 					ImageUrl = Paths.ProfilePicture(m.Id)
@@ -67,6 +72,44 @@ namespace GraduationProjectAPI.Utilities.ExtensionMethods
 		{
 			return await query.Where(m => m.Id == id)
 				.Select(m => m.NationalIdImage)
+				.FirstOrDefaultAsync();
+		}
+
+		public static async Task<MediatorTaskElementDto[]> SelectMediatorTaskElementDtoAsync(this IQueryable<Mediator> query, int id, int page)
+		{
+			return await query.Where(m => m.StatusId == StatusType.Pending && !m.ReviewsAboutMe.Any(r => r.ReviewerId == id))
+				.Skip(Pagination.MaxPageSize * (page - 1))
+				.Take(Pagination.MaxPageSize)
+				.OrderBy(m => m.DateRegistered)
+				.Select(m => new MediatorTaskElementDto
+				{
+					Id = m.Id,
+					Name = m.Name,
+					PhoneNumber = m.PhoneNumber,
+					DateRegistered = m.DateRegistered,
+					Details = m.GeoLocation.Details,
+					ImageUrl = Paths.ProfilePicture(m.Id)
+				}).ToArrayAsync();
+		}
+
+		public static async Task<MediatorTaskDetailsDto> SelectMediatorTaskDetailsDtoAsync(this IQueryable<Mediator> query, int mediatorId, int myId)
+		{
+			return await query.Where(m => m.Id == mediatorId && m.StatusId == StatusType.Pending && !m.ReviewsAboutMe.Any(r => r.ReviewerId == myId))
+				.Select(m => new MediatorTaskDetailsDto
+				{
+					Id = m.Id,
+					Name = m.Name,
+					PhoneNumber = m.PhoneNumber,
+					BirthDate = m.BirthDate,
+					ImageUrl = Paths.ProfilePicture(m.Id),
+					Reviews = m.ReviewsAboutMe.Select(r => new ReviewElementDto
+					{
+						Name = r.Reviewer.Name,
+						IsWorthy = r.IsWorthy,
+						DateReviewed = r.DateReviewed,
+						ImageUrl = Paths.ProfilePicture(r.ReviewerId)
+					})
+				})
 				.FirstOrDefaultAsync();
 		}
 	}

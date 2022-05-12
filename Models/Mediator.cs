@@ -23,6 +23,8 @@ namespace GraduationProjectAPI.Models
 		[Required, MaxLength(14), Column(TypeName = "varchar")]
 		public string NationalId { get; set; }
 
+		public int Balance { get; set; }
+
 		[Column(TypeName = "date")]
 		public DateTime? BirthDate { get; set; }
 

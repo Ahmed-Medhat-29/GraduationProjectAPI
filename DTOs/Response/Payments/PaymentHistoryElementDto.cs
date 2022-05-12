@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace GraduationProjectAPI.DTOs.Response.Cases
+namespace GraduationProjectAPI.DTOs.Response.Payments
 {
-	public class PreviousPaymentElementDto
+	public class PaymentHistoryElementDto
 	{
 		public string Name { get; set; }
 		public DateTime Datetime { get; set; }

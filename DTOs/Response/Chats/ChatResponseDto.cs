@@ -9,6 +9,11 @@ namespace GraduationProjectAPI.DTOs.Response.Chats
 		public DateTime DateTime { get; set; }
 		public string Type { get; set; }
 
+		public ChatResponseDto()
+		{
+
+		}
+
 		public ChatResponseDto(Chat chat)
 		{
 			Message = chat.Message;

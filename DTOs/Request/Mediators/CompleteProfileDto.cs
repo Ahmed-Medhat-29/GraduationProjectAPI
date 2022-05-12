@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
+using GraduationProjectAPI.Models;
 
 namespace GraduationProjectAPI.DTOs.Request.Mediators
 {
@@ -19,7 +20,7 @@ namespace GraduationProjectAPI.DTOs.Request.Mediators
 		[Range(1, int.MaxValue)]
 		public int RegionId { get; set; }
 
-		public void UpdateMediator(Models.Mediator mediator)
+		public void UpdateMediator(Mediator mediator)
 		{
 			mediator.Job = Job ?? mediator.Job;
 			mediator.Address = Address ?? mediator.Address;

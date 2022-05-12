@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using GraduationProjectAPI.DTOs.Response.Cases;
+using GraduationProjectAPI.DTOs.Response.Payments;
+using GraduationProjectAPI.Enums;
 using GraduationProjectAPI.Models;
+using GraduationProjectAPI.Utilities.General;
 using GraduationProjectAPI.Utilities.StaticStrings;
 using Microsoft.EntityFrameworkCore;
 
@@ -21,7 +24,27 @@ namespace GraduationProjectAPI.Utilities.ExtensionMethods
 					Name = c.Name,
 					Title = c.Title,
 					Priority = c.Priority.Name,
-					Age = (short)(DateTime.Now - c.DateRequested).TotalDays,
+					Age = (short)(c.PaymentDate - DateTime.Now).TotalDays,
+					FundRaised = 4000,
+					TotalNeeded = c.NeededMoneyAmount,
+					NumberOfContributer = 32,
+					ImageUrl = c.Images.Select(i => Paths.CaseImage(i.Id)).FirstOrDefault()
+				}).ToArrayAsync();
+		}
+
+		public static async Task<CaseElementDto[]> SelectCaseElementDtoAsync(this IQueryable<Case> query, int page)
+		{
+			return await query
+				.OrderByDescending(c => c.DateRequested)
+				.Skip(Pagination.MaxPageSize * (page - 1))
+				.Take(Pagination.MaxPageSize)
+				.Select(c => new CaseElementDto
+				{
+					Id = c.Id,
+					Name = c.Name,
+					Title = c.Title,
+					Priority = c.Priority.Name,
+					Age = (short)(c.PaymentDate - DateTime.Now).TotalDays,
 					FundRaised = 4000,
 					TotalNeeded = c.NeededMoneyAmount,
 					NumberOfContributer = 32,
@@ -45,23 +68,15 @@ namespace GraduationProjectAPI.Utilities.ExtensionMethods
 						Name = c.Mediator.Name,
 						ImageUrl = Paths.ProfilePicture(c.MediatorId)
 					},
-					History = new[]
-					{
-						new PreviousPaymentElementDto
+					History = c.CasePayments
+						.Where(cp => cp.DateDelivered != null)
+						.Select(cp => new PaymentHistoryElementDto
 						{
-							Name = "Dummy Name",
-							Amount = 1000,
-							Datetime = DateTime.Now,
-							ImageUrl = Paths.ProfilePicture(c.MediatorId)
-						},
-						new PreviousPaymentElementDto
-						{
-							Name = "Another Dummy Name",
-							Amount = 1200,
-							Datetime = DateTime.Now,
-							ImageUrl = Paths.ProfilePicture(c.MediatorId)
-						}
-					}
+							Name = cp.Mediator.Name,
+							Amount = cp.Amount,
+							Datetime = (DateTime)cp.DateDelivered,
+							ImageUrl = cp.Case.Images.Select(i => Paths.CaseImage(i.Id)).FirstOrDefault()
+						})
 				})
 				.FirstOrDefaultAsync(c => c.Id == id);
 		}
@@ -70,6 +85,53 @@ namespace GraduationProjectAPI.Utilities.ExtensionMethods
 		{
 			return await query.Where(c => c.Id == id)
 				.Select(c => c.Images.Select(i => Paths.CaseImage(i.Id)))
+				.FirstOrDefaultAsync();
+		}
+
+		public static async Task<CaseTaskElementDto[]> SelectCaseTaskElementDtoAsync(this IQueryable<Case> query, int id, int page)
+		{
+			return await query.Where(c => c.StatusId == StatusType.Pending && c.MediatorId != id && !c.CaseReviews.Any(r => r.MediatorId == id))
+				.OrderBy(c => c.DateRequested)
+				.Select(c => new CaseTaskElementDto
+				{
+					Id = c.Id,
+					Title = c.Title,
+					NeededMoneyAmount = c.NeededMoneyAmount,
+					Age = (short)(DateTime.Now - c.DateRequested).Days,
+					Period = c.PeriodId.ToEnumString(),
+					Details = c.GeoLocation.Details,
+					ImageUrl = c.Images.Select(i => Paths.CaseImage(i.Id)).FirstOrDefault()
+				})
+				.Skip(Pagination.MaxPageSize * (page - 1))
+				.Take(Pagination.MaxPageSize)
+				.ToArrayAsync();
+		}
+
+		public static async Task<CaseTaskDetailsDto> SelectCaseTaskDetailsDtoAsync(this IQueryable<Case> query, int caseId, int userId)
+		{
+			return await query.Where(c => c.Id == caseId && c.StatusId == StatusType.Pending && c.MediatorId != userId && !c.CaseReviews.Any(r => r.MediatorId == userId))
+				.Select(c => new CaseTaskDetailsDto
+				{
+					Id = c.Id,
+					Title = c.Title,
+					NeededMoneyAmount = c.NeededMoneyAmount,
+					DateRequested = c.DateRequested,
+					Story = c.Story,
+					Period = c.PeriodId.ToEnumString(),
+					Mediator = new CaseMediatorDto
+					{
+						Id = c.MediatorId,
+						Name = c.Mediator.Name,
+						ImageUrl = Paths.ProfilePicture(c.MediatorId)
+					},
+					Reviews = c.CaseReviews.Select(r => new DTOs.Response.ReviewElementDto
+					{
+						Name = r.Mediator.Name,
+						IsWorthy = r.IsWorthy,
+						DateReviewed = r.DateReviewed,
+						ImageUrl = Paths.ProfilePicture(r.MediatorId)
+					})
+				})
 				.FirstOrDefaultAsync();
 		}
 	}

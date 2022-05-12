@@ -4,15 +4,17 @@ using GraduationProjectAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NetTopologySuite.Geometries;
 
 namespace GraduationProjectAPI.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220509111433_AddBalanceColumnToMediatorsTable")]
+    partial class AddBalanceColumnToMediatorsTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -137,40 +139,6 @@ namespace GraduationProjectAPI.Migrations
                     b.HasIndex("StatusId");
 
                     b.ToTable("Cases");
-                });
-
-            modelBuilder.Entity("GraduationProjectAPI.Models.CasePayment", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
-
-                    b.Property<int>("AdminId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Amount")
-                        .HasColumnType("int");
-
-                    b.Property<int>("CaseId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("DateDelivered")
-                        .HasColumnType("datetime2(0)");
-
-                    b.Property<DateTime>("DateSubmitted")
-                        .HasColumnType("datetime2(0)");
-
-                    b.Property<int>("MediatorId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CaseId");
-
-                    b.HasIndex("MediatorId");
-
-                    b.ToTable("CasePayments");
                 });
 
             modelBuilder.Entity("GraduationProjectAPI.Models.CaseProperties.Category", b =>
@@ -945,25 +913,6 @@ namespace GraduationProjectAPI.Migrations
                     b.Navigation("SocialStatus");
 
                     b.Navigation("Status");
-                });
-
-            modelBuilder.Entity("GraduationProjectAPI.Models.CasePayment", b =>
-                {
-                    b.HasOne("GraduationProjectAPI.Models.Case", "Case")
-                        .WithMany()
-                        .HasForeignKey("CaseId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("GraduationProjectAPI.Models.Mediator", "Mediator")
-                        .WithMany()
-                        .HasForeignKey("MediatorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Case");
-
-                    b.Navigation("Mediator");
                 });
 
             modelBuilder.Entity("GraduationProjectAPI.Models.CaseProperties.Image", b =>

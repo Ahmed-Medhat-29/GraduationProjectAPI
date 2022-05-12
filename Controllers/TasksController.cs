@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -38,27 +37,13 @@ namespace GraduationProjectAPI.Controllers
 			if (page <= 0) return NotFound(null);
 
 			var pendingMediatorsCount = await _context.Mediators
-				.Where(m => m.StatusId == StatusType.Pending && !m.ReviewsAboutMe.Any(r => r.ReviewerId == GetUserId()))
-				.CountAsync();
+				.CountAsync(m => m.StatusId == StatusType.Pending && !m.ReviewsAboutMe.Any(r => r.ReviewerId == GetUserId()));
 
 			if (pendingMediatorsCount <= 0)
 				return new SuccessWithPagination(Array.Empty<object>(), new Pagination(page));
 
 			var pendingMediators = await _context.Mediators
-				.Where(m => m.StatusId == StatusType.Pending && !m.ReviewsAboutMe.Any(r => r.ReviewerId == GetUserId()))
-				.OrderBy(m => m.DateRegistered)
-				.Select(m => new
-				{
-					Id = m.Id,
-					Name = m.Name,
-					PhoneNumber = m.PhoneNumber,
-					DateRegistered = m.DateRegistered,
-					Details = m.GeoLocation.Details,
-					ImageUrl = Paths.ProfilePicture(m.Id)
-				})
-				.Skip(Pagination.MaxPageSize * (page - 1))
-				.Take(Pagination.MaxPageSize)
-				.ToArrayAsync();
+				.SelectMediatorTaskElementDtoAsync(GetUserId(), page);
 
 			return new SuccessWithPagination(pendingMediators, new Pagination(page, pendingMediatorsCount, pendingMediators.Length));
 		}
@@ -66,26 +51,7 @@ namespace GraduationProjectAPI.Controllers
 		[HttpGet("pending-mediators/{id:min(1)}")]
 		public async Task<IActionResult> PendingMediator(int id)
 		{
-			var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-			var mediator = await _context.Mediators
-				.Where(m => m.Id == id && m.StatusId == StatusType.Pending && !m.ReviewsAboutMe.Any(r => r.ReviewerId == userId))
-				.Select(m => new
-				{
-					Id = m.Id,
-					Name = m.Name,
-					PhoneNumber = m.PhoneNumber,
-					BirthDate = m.BirthDate,
-					ImageUrl = Paths.ProfilePicture(m.Id),
-					Reviews = m.ReviewsAboutMe.Select(r => new
-					{
-						Name = r.Reviewer.Name,
-						IsWorthy = r.IsWorthy,
-						DateReviewed = r.DateReviewed,
-						ImageUrl = Paths.ProfilePicture(r.ReviewerId)
-					})
-				})
-				.FirstOrDefaultAsync();
-
+			var mediator = await _context.Mediators.SelectMediatorTaskDetailsDtoAsync(id, GetUserId());
 			if (mediator == null)
 				return NotFound(null);
 
@@ -98,28 +64,13 @@ namespace GraduationProjectAPI.Controllers
 			if (page <= 0) return NotFound(null);
 
 			var pendingCasesCount = await _context.Cases
-				.Where(c => c.StatusId == StatusType.Pending && c.MediatorId != GetUserId() && !c.CaseReviews.Any(r => r.MediatorId == GetUserId()))
-				.CountAsync();
+				.CountAsync(c => c.StatusId == StatusType.Pending && c.MediatorId != GetUserId() && !c.CaseReviews.Any(r => r.MediatorId == GetUserId()));
 
 			if (pendingCasesCount <= 0)
 				return new SuccessWithPagination(Array.Empty<object>(), new Pagination(page));
 
 			var pendingCases = await _context.Cases
-				.Where(c => c.StatusId == StatusType.Pending && c.MediatorId != GetUserId() && !c.CaseReviews.Any(r => r.MediatorId == GetUserId()))
-				.OrderBy(c => c.DateRequested)
-				.Select(c => new
-				{
-					Id = c.Id,
-					Title = c.Title,
-					NeededMoneyAmount = c.NeededMoneyAmount,
-					Age = (DateTime.Now - c.DateRequested).Days,
-					Period = ((PeriodType)c.PeriodId).ToEnumString(),
-					Details = c.GeoLocation.Details,
-					ImageUrl = c.Images.Select(i => Paths.CaseImage(i.Id)).FirstOrDefault()
-				})
-				.Skip(Pagination.MaxPageSize * (page - 1))
-				.Take(Pagination.MaxPageSize)
-				.ToArrayAsync();
+				.SelectCaseTaskElementDtoAsync(GetUserId(), page);
 
 			return new SuccessWithPagination(pendingCases, new Pagination(page, pendingCasesCount, pendingCases.Length));
 		}
@@ -127,40 +78,14 @@ namespace GraduationProjectAPI.Controllers
 		[HttpGet("pending-cases/{id:min(1)}")]
 		public async Task<IActionResult> PendingCase(int id)
 		{
-			var @case = await _context.Cases
-				.Where(c => c.Id == id && c.StatusId == StatusType.Pending && c.MediatorId != GetUserId() && !c.CaseReviews.Any(r => r.MediatorId == GetUserId()))
-				.Select(c => new
-				{
-					Id = c.Id,
-					Title = c.Title,
-					NeededMoneyAmount = c.NeededMoneyAmount,
-					DateRequested = c.DateRequested,
-					Story = c.Story,
-					Period = ((PeriodType)c.PeriodId).ToEnumString(),
-					ImagesUrls = new List<string>(),
-					Mediator = new
-					{
-						Id = c.MediatorId,
-						Name = c.Mediator.Name,
-						ImageUrl = Paths.ProfilePicture(c.MediatorId)
-					},
-					Reviews = c.CaseReviews.Select(r => new
-					{
-						Name = r.Mediator.Name,
-						IsWorthy = r.IsWorthy,
-						DateReviewed = r.DateReviewed,
-						ImageUrl = Paths.ProfilePicture(r.MediatorId)
-					})
-				})
-				.FirstOrDefaultAsync();
-
+			var @case = await _context.Cases.SelectCaseTaskDetailsDtoAsync(id, GetUserId());
 			if (@case == null)
 				return NotFound(null);
 
-			@case.ImagesUrls.AddRange(await _context.Cases
+			@case.ImagesUrls = await _context.Cases
 				.Where(c => c.Id == @case.Id)
 				.Select(c => c.Images.Select(i => Paths.CaseImage(i.Id)))
-				.FirstOrDefaultAsync());
+				.FirstOrDefaultAsync();
 
 			return new Success(@case);
 		}
@@ -197,6 +122,8 @@ namespace GraduationProjectAPI.Controllers
 			_ = CheckAndUpdateCaseStatus(dto.RevieweeId);
 			return new Success();
 		}
+
+		// ************************ Private methods ************************
 
 		private int GetUserId()
 		{

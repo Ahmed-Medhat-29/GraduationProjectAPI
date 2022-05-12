@@ -19,7 +19,7 @@ namespace GraduationProjectAPI.DTOs.Common
 		{
 			return new GeoLocation
 			{
-				Location = new Point(new Coordinate(Longitude, Latitude)) { SRID = 4326 },
+				Location = new Point(Longitude, Latitude) { SRID = 4326 },
 				Details = Details
 			};
 		}

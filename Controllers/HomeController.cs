@@ -59,6 +59,14 @@ namespace GraduationProjectAPI.Controllers
 			return new Success("Hi, I am donator");
 		}
 
+		[HttpGet("[action]")]
+		public async Task<IActionResult> FAQ()
+		{
+			return new Success(await _context.FAQs
+				.Select(f => new { f.Title, f.Description })
+				.ToArrayAsync());
+		}
+
 		// ********************** Private methods **********************************
 
 		private int GetUserId()

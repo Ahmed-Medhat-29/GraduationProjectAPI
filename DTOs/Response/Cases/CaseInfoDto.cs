@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using GraduationProjectAPI.DTOs.Response.Payments;
 
 namespace GraduationProjectAPI.DTOs.Response.Cases
 {
@@ -12,6 +13,6 @@ namespace GraduationProjectAPI.DTOs.Response.Cases
 		public int TotalNeeded { get; set; }
 		public CaseMediatorDto Mediator { get; set; }
 		public IEnumerable<string> ImagesUrls { get; set; }
-		public IEnumerable<PreviousPaymentElementDto> History { get; set; }
+		public IEnumerable<PaymentHistoryElementDto> History { get; set; }
 	}
 }

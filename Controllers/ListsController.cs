@@ -47,32 +47,22 @@ namespace GraduationProjectAPI.Controllers
 		[HttpGet("[action]/{id:min(1)}")]
 		public async Task<IActionResult> Cities(int id)
 		{
-			IEnumerable<ListItem> cities;
-			if (_memoryCache.TryGetValue(nameof(cities) + id, out cities))
-				return new Success(cities);
-
-			cities = await _context.Cities
+			var cities = await _context.Cities
 				.Where(c => c.GovernorateId == id)
 				.Select(c => new ListItem(c.Id, c.Name))
 				.ToArrayAsync();
 
-			_memoryCache.Set(nameof(cities) + id, cities, _cacheDuration);
 			return new Success(cities);
 		}
 
 		[HttpGet("[action]/{id:min(1)}")]
 		public async Task<IActionResult> Regions(int id)
 		{
-			IEnumerable<ListItem> regions;
-			if (_memoryCache.TryGetValue(nameof(regions) + id, out regions))
-				return new Success(regions);
-
-			regions = await _context.Regions
+			var regions = await _context.Regions
 				.Where(r => r.CityId == id)
 				.Select(r => new ListItem(r.Id, r.Name))
 				.ToArrayAsync();
 
-			_memoryCache.Set(nameof(regions) + id, regions, _cacheDuration);
 			return new Success(regions);
 		}
 

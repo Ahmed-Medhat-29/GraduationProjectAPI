@@ -8,6 +8,7 @@ namespace GraduationProjectAPI.DTOs.Response.Mediators
 		public string Name { get; set; }
 		public string PhoneNumber { get; set; }
 		public string NationalId { get; set; }
+		public int Balance { get; set; }
 		public string Job { get; set; }
 		public string Address { get; set; }
 		public DateTime? BirthDate { get; set; }
