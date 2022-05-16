@@ -34,7 +34,7 @@ namespace GraduationProjectAPI.Controllers
 		{
 			var chat = await _context.Chats
 				.Where(c => c.MediatorId == GetUserId())
-				.Select(c => new ChatResponseDto
+				.Select(c => new ChatDto
 				{
 					Message = c.Message,
 					DateTime = c.DateTime,
@@ -79,7 +79,7 @@ namespace GraduationProjectAPI.Controllers
 			if (string.IsNullOrWhiteSpace(firebaseToken))
 				return;
 
-			var handler = new NotificationHandler(new ChatResponseDto(chat));
+			var handler = new NotificationHandler(new ChatDto(chat));
 			await handler.SendAsync(firebaseToken);
 		}
 

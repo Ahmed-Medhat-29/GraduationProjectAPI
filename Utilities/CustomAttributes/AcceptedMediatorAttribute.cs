@@ -16,7 +16,7 @@ namespace GraduationProjectAPI.Utilities.CustomAttributes
 			var context = (ApplicationDbContext)validationContext.GetService(typeof(ApplicationDbContext));
 			var statusType = context.Mediators
 				.Where(m => m.PhoneNumber == dto.PhoneNumber)
-				.Select(m => (StatusType)m.StatusId)
+				.Select(m => m.StatusId)
 				.FirstOrDefault();
 
 			if (statusType == StatusType.Accepted)

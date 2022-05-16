@@ -14,10 +14,44 @@ namespace GraduationProjectAPI.Utilities.ExtensionMethods
 {
 	public static class MediatorsQueryExtenders
 	{
-		public static async Task<SignInResponseDto> SelectSignInResponseDtoAsync(this IQueryable<Mediator> query, IAuthenticationTokenGenerator tokenGenerator, string phoneNumber)
+		public static async Task<MediatorDetails> SelectMediatorDetailsDtoAsync(this IQueryable<Mediator> query, int id, string jwtToken)
 		{
 			return await query
-				.Select(m => new SignInResponseDto
+				.Where(m => m.Id == id)
+				.Select(m => new MediatorDetails
+				{
+					Name = m.Name,
+					PhoneNumber = m.PhoneNumber,
+					NationalId = m.NationalId,
+					Balance = m.Balance,
+					Job = m.Job,
+					Address = m.Address,
+					BirthDate = m.BirthDate,
+					Bio = m.Bio,
+					Completed = m.Completed,
+					JwtToken = jwtToken,
+					FirebaseToken = m.FirebaseToken,
+					Gender = m.GenderId.ToString(),
+					Region = m.Region.Name,
+					SocialStatus = m.SocialStatusId.ToString(),
+					Locale = m.LocaleId.ToString(),
+					Status = m.StatusId.ToString(),
+					ProfileImageUrl = Paths.ProfilePicture(m.Id),
+					NationalIdImageUrl = Paths.NationalIdImage(m.Id),
+					GeoLocation = new GeoLocationDto
+					{
+						Longitude = m.GeoLocation.Location.Coordinate.X,
+						Latitude = m.GeoLocation.Location.Coordinate.Y,
+						Details = m.GeoLocation.Details
+					}
+				})
+				.FirstAsync();
+		}
+
+		public static async Task<MediatorDetails> SelectMediatorDetailsDtoAsync(this IQueryable<Mediator> query, IAuthenticationTokenGenerator tokenGenerator, string phoneNumber)
+		{
+			return await query
+				.Select(m => new MediatorDetails
 				{
 					Name = m.Name,
 					PhoneNumber = m.PhoneNumber,
@@ -102,7 +136,7 @@ namespace GraduationProjectAPI.Utilities.ExtensionMethods
 					PhoneNumber = m.PhoneNumber,
 					BirthDate = m.BirthDate,
 					ImageUrl = Paths.ProfilePicture(m.Id),
-					Reviews = m.ReviewsAboutMe.Select(r => new ReviewElementDto
+					Reviews = m.ReviewsAboutMe.Select(r => new ReviewDto
 					{
 						Name = r.Reviewer.Name,
 						IsWorthy = r.IsWorthy,

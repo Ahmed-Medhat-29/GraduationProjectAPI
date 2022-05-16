@@ -1,6 +1,6 @@
 ﻿namespace GraduationProjectAPI.DTOs.Response.Cases
 {
-	public class CaseTaskElementDto
+	public class ReviewCaseTaskElementDto
 	{
 		public int Id { get; set; }
 		public string Title { get; set; }

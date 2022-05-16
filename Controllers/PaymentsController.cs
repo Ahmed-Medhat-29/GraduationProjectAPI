@@ -79,7 +79,7 @@ namespace GraduationProjectAPI.Controllers
 
 			var history = await _context.CasePayments
 				.Where(cp => cp.CaseId == id && cp.DateDelivered != null)
-				.Select(cp => new PaymentHistoryElementDto
+				.Select(cp => new PaymentElementDto
 				{
 					Name = cp.Mediator.Name,
 					Amount = cp.Amount,
@@ -92,7 +92,7 @@ namespace GraduationProjectAPI.Controllers
 			foreach (var item in history)
 				paid += item.Amount;
 
-			var paymentHistory = new PaymentHistoryDto
+			var paymentHistory = new CasePaymentHistoryDto
 			{
 				Total = total,
 				Paid = paid,
@@ -121,11 +121,34 @@ namespace GraduationProjectAPI.Controllers
 				.Select(cp => new CasePaymentElementDto
 				{
 					Id = cp.Id,
-					Ttitle = cp.Case.Name,
+					Title = cp.Case.Name,
 					Amount = cp.Amount,
+					Total = cp.Case.NeededMoneyAmount,
+					PhoneNumber = cp.Case.PhoneNumber,
+					MediatorName = cp.Case.Mediator.Name,
+					CaseName = cp.Case.Name,
 					Age = (short)(cp.Case.PaymentDate - DateTime.Now).TotalDays,
 					ImageUrl = cp.Case.Images.Select(i => Paths.CaseImage(i.Id)).FirstOrDefault()
 				}).ToArrayAsync();
+
+			foreach (var @case in cases)
+			{
+				var caseId = await _context.CasePayments
+					.Where(cp => cp.Id == @case.Id)
+					.Select(cp => cp.CaseId)
+					.FirstAsync();
+
+				var amounts = await _context.CasePayments
+					.Where(cp => cp.CaseId == caseId && cp.DateDelivered != null)
+					.Select(cp => cp.Amount)
+					.ToArrayAsync();
+
+				@case.Contributers = amounts.Count();
+
+				foreach (var amount in amounts)
+					@case.Paid += amount;
+			}
+
 
 			return new SuccessWithPagination(cases, new Pagination(page, casesCount, cases.Length));
 		}
@@ -133,13 +156,37 @@ namespace GraduationProjectAPI.Controllers
 		[HttpPost("[action]/{id:min(1)}")]
 		public async Task<IActionResult> Confirm(int id)
 		{
-			var isPaymentExists = await _context.CasePayments.AnyAsync(cp => cp.Id == id && cp.DateDelivered == null);
-			if (!isPaymentExists)
+			var casePayment = await _context.CasePayments
+				.Select(cp => new CasePayment
+				{
+					Id = cp.Id,
+					Amount = cp.Amount,
+					DateDelivered = cp.DateDelivered
+				})
+				.FirstOrDefaultAsync(cp => cp.Id == id);
+
+			if (casePayment == null)
 				return new BadRequest("Transaction was not found");
 
-			var casePayment = new CasePayment { Id = id };
+			if (casePayment.DateDelivered != null)
+				return new BadRequest("You have paid this case already");
+
+			var mediator = await _context.Mediators
+				.Select(m => new Mediator
+				{
+					Id = m.Id,
+					Balance = m.Balance
+				}).FirstAsync(m => m.Id == GetUserId());
+
+			if (mediator.Balance < casePayment.Amount)
+				return new BadRequest("Insufficient balance");
+
 			_context.CasePayments.Attach(casePayment);
 			casePayment.DateDelivered = DateTime.Now;
+
+			_context.Mediators.Attach(mediator);
+			mediator.Balance -= casePayment.Amount;
+
 			await _context.SaveChangesAsync();
 			return new Success();
 		}

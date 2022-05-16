@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace GraduationProjectAPI.DTOs.Response.Cases
 {
-	public class CaseTaskDetailsDto
+	public class ReviewCaseTaskDetailsDto
 	{
 		public int Id { get; set; }
 		public string Title { get; set; }
@@ -13,6 +13,6 @@ namespace GraduationProjectAPI.DTOs.Response.Cases
 		public string Period { get; set; }
 		public IEnumerable<string> ImagesUrls { get; set; }
 		public CaseMediatorDto Mediator { get; set; }
-		public IEnumerable<ReviewElementDto> Reviews { get; set; }
+		public IEnumerable<ReviewDto> Reviews { get; set; }
 	}
 }

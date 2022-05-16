@@ -3,7 +3,7 @@ using GraduationProjectAPI.DTOs.Common;
 
 namespace GraduationProjectAPI.DTOs.Response.Mediators
 {
-	public class SignInResponseDto
+	public class MediatorDetails
 	{
 		public string Name { get; set; }
 		public string PhoneNumber { get; set; }

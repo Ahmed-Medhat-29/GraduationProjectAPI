@@ -1,4 +1,5 @@
 ﻿using System;
+using GraduationProjectAPI.Models;
 
 namespace GraduationProjectAPI.DTOs.Response
 {
@@ -18,7 +19,7 @@ namespace GraduationProjectAPI.DTOs.Response
 
 		}
 
-		public NotificationDto(Models.Notification notification)
+		public NotificationDto(Notification notification)
 		{
 			Id = notification.Id;
 			Title = notification.Title;

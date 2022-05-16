@@ -18,19 +18,29 @@ namespace GraduationProjectAPI.Utilities.CustomAttributes
 				return true;
 
 			var file = value as IFormFile ?? throw new InvalidCastException("Object must be of type IFormFile");
-			if (!ValidImage.Extentions.Contains(Path.GetExtension(file.FileName.ToLower())))
-			{
-				ErrorMessage = "Image is not valid";
-				return false;
-			}
-
-			if (MaxSize > 0 && file.Length > MaxSize)
+			if (!IsSizeValid(file))
 			{
 				ErrorMessage = $"Image exceeded size limit of {MaxSize} bytes";
 				return false;
 			}
 
+			if (!IsExtensionValid(file))
+			{
+				ErrorMessage = "Image is not valid";
+				return false;
+			}
+
 			return true;
+		}
+
+		private bool IsSizeValid(IFormFile file)
+		{
+			return MaxSize <= 0 || file.Length < MaxSize;
+		}
+
+		private bool IsExtensionValid(IFormFile file)
+		{
+			return ValidImage.Extentions.Contains(Path.GetExtension(file.FileName.ToLower()));
 		}
 	}
 }

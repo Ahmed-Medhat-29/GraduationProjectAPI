@@ -18,22 +18,29 @@ namespace GraduationProjectAPI.Utilities.CustomAttributes
 				return true;
 
 			var files = value as IFormFileCollection ?? throw new InvalidCastException("Object must be of type IFormFileCollection");
-			foreach (var file in files)
+			if (!IsSizeValid(files))
 			{
-				if (!ValidImage.Extentions.Contains(Path.GetExtension(file.FileName.ToLower())))
-				{
-					ErrorMessage = "One or more images are not valid";
-					return false;
-				}
+				ErrorMessage = $"One or more images exceeded size limit of {MaxSize} bytes";
+				return false;
+			}
 
-				if (MaxSize > 0 && file.Length > MaxSize)
-				{
-					ErrorMessage = $"One or more images exceeded size limit of {MaxSize} bytes";
-					return false;
-				}
+			if (!IsExtensionValid(files))
+			{
+				ErrorMessage = "One or more images are not valid";
+				return false;
 			}
 
 			return true;
+		}
+
+		private bool IsSizeValid(IFormFileCollection files)
+		{
+			return MaxSize <= 0 || files.All(f => f.Length < MaxSize);
+		}
+
+		private bool IsExtensionValid(IFormFileCollection files)
+		{
+			return files.All(f => ValidImage.Extentions.Contains(Path.GetExtension(f.FileName.ToLower())));
 		}
 	}
 }

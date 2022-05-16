@@ -6,6 +6,7 @@ using GraduationProjectAPI.Enums;
 using GraduationProjectAPI.Utilities.CustomApiResponses;
 using GraduationProjectAPI.Utilities.ExtensionMethods;
 using GraduationProjectAPI.Utilities.StaticStrings;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -42,14 +43,15 @@ namespace GraduationProjectAPI.Controllers
 				.SelectCaseElementDtoAsync();
 
 			var myCases = await query
-				.Where(c => c.MediatorId == GetUserId())
+				.Where(c => c.MediatorId == GetUserId() && c.StatusId == StatusType.Accepted)
 				.SelectCaseElementDtoAsync();
 
 			var areaCases = await query
-				.Where(c => c.StatusId == StatusType.Accepted && c.RegionId == userRegionId)
+				.Where(c => c.RegionId == userRegionId && c.StatusId == StatusType.Accepted)
 				.SelectCaseElementDtoAsync();
 
-			return new Success(new { urgentCases, myCases, areaCases });
+			var user = await _context.Mediators.SelectMediatorDetailsDtoAsync(GetUserId(), await HttpContext.GetTokenAsync("Bearer", "access_token"));
+			return new Success(new { urgentCases, myCases, areaCases, user });
 		}
 
 		[Authorize(Roles = Roles.Donator)]

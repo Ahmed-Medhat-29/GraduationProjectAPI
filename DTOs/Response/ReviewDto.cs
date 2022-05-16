@@ -2,7 +2,7 @@
 
 namespace GraduationProjectAPI.DTOs.Response
 {
-	public class ReviewElementDto
+	public class ReviewDto
 	{
 		public string Name { get; set; }
 		public bool IsWorthy { get; set; }

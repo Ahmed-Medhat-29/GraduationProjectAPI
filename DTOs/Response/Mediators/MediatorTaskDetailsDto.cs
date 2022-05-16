@@ -10,6 +10,6 @@ namespace GraduationProjectAPI.DTOs.Response.Mediators
 		public string PhoneNumber { get; set; }
 		public DateTime? BirthDate { get; set; }
 		public string ImageUrl { get; set; }
-		public IEnumerable<ReviewElementDto> Reviews { get; set; }
+		public IEnumerable<ReviewDto> Reviews { get; set; }
 	}
 }

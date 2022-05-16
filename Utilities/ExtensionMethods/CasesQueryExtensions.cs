@@ -52,10 +52,10 @@ namespace GraduationProjectAPI.Utilities.ExtensionMethods
 				}).ToArrayAsync();
 		}
 
-		public static async Task<CaseInfoDto> SelectCaseInfoDtoAsync(this IQueryable<Case> query, int id)
+		public static async Task<CaseDetailsDto> SelectCaseInfoDtoAsync(this IQueryable<Case> query, int id)
 		{
 			return await query.Select(c =>
-				new CaseInfoDto
+				new CaseDetailsDto
 				{
 					Id = c.Id,
 					Title = c.Title,
@@ -70,7 +70,7 @@ namespace GraduationProjectAPI.Utilities.ExtensionMethods
 					},
 					History = c.CasePayments
 						.Where(cp => cp.DateDelivered != null)
-						.Select(cp => new PaymentHistoryElementDto
+						.Select(cp => new PaymentElementDto
 						{
 							Name = cp.Mediator.Name,
 							Amount = cp.Amount,
@@ -88,11 +88,11 @@ namespace GraduationProjectAPI.Utilities.ExtensionMethods
 				.FirstOrDefaultAsync();
 		}
 
-		public static async Task<CaseTaskElementDto[]> SelectCaseTaskElementDtoAsync(this IQueryable<Case> query, int id, int page)
+		public static async Task<ReviewCaseTaskElementDto[]> SelectCaseTaskElementDtoAsync(this IQueryable<Case> query, int id, int page)
 		{
 			return await query.Where(c => c.StatusId == StatusType.Pending && c.MediatorId != id && !c.CaseReviews.Any(r => r.MediatorId == id))
 				.OrderBy(c => c.DateRequested)
-				.Select(c => new CaseTaskElementDto
+				.Select(c => new ReviewCaseTaskElementDto
 				{
 					Id = c.Id,
 					Title = c.Title,
@@ -107,10 +107,10 @@ namespace GraduationProjectAPI.Utilities.ExtensionMethods
 				.ToArrayAsync();
 		}
 
-		public static async Task<CaseTaskDetailsDto> SelectCaseTaskDetailsDtoAsync(this IQueryable<Case> query, int caseId, int userId)
+		public static async Task<ReviewCaseTaskDetailsDto> SelectCaseTaskDetailsDtoAsync(this IQueryable<Case> query, int caseId, int userId)
 		{
 			return await query.Where(c => c.Id == caseId && c.StatusId == StatusType.Pending && c.MediatorId != userId && !c.CaseReviews.Any(r => r.MediatorId == userId))
-				.Select(c => new CaseTaskDetailsDto
+				.Select(c => new ReviewCaseTaskDetailsDto
 				{
 					Id = c.Id,
 					Title = c.Title,
@@ -124,7 +124,7 @@ namespace GraduationProjectAPI.Utilities.ExtensionMethods
 						Name = c.Mediator.Name,
 						ImageUrl = Paths.ProfilePicture(c.MediatorId)
 					},
-					Reviews = c.CaseReviews.Select(r => new DTOs.Response.ReviewElementDto
+					Reviews = c.CaseReviews.Select(r => new DTOs.Response.ReviewDto
 					{
 						Name = r.Mediator.Name,
 						IsWorthy = r.IsWorthy,

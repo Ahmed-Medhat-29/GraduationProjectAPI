@@ -11,7 +11,7 @@ namespace GraduationProjectAPI.Utilities.CustomAttributes
 	{
 		protected override ValidationResult IsValid(object value, ValidationContext validationContext)
 		{
-			var dto = value as RegisterDto;
+			var dto = value as RegisterDto ?? throw new InvalidCastException($"Object must be of type {nameof(RegisterDto)}"); ;
 			var context = (ApplicationDbContext)validationContext.GetService(typeof(ApplicationDbContext));
 			var mediator = context.Mediators.Select(m => new { m.NationalId, m.PhoneNumber })
 				.FirstOrDefault(m => m.PhoneNumber == dto.PhoneNumber || m.NationalId == dto.NationalId);

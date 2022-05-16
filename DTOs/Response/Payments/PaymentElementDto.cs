@@ -2,7 +2,7 @@
 
 namespace GraduationProjectAPI.DTOs.Response.Payments
 {
-	public class PaymentHistoryElementDto
+	public class PaymentElementDto
 	{
 		public string Name { get; set; }
 		public DateTime Datetime { get; set; }

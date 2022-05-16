@@ -49,7 +49,7 @@ namespace GraduationProjectAPI.Controllers
 		[HttpPost("[action]")]
 		public async Task<IActionResult> SignIn([FromForm] SignInRequestDto dto, [FromServices] IAuthenticationTokenGenerator tokenGenerator)
 		{
-			var responseDto = await _context.Mediators.SelectSignInResponseDtoAsync(tokenGenerator, dto.PhoneNumber);
+			var responseDto = await _context.Mediators.SelectMediatorDetailsDtoAsync(tokenGenerator, dto.PhoneNumber);
 			responseDto.FirebaseToken = dto.FirebaseToken;
 			_ = UpdateFirebaseTokenAsync(dto.PhoneNumber, dto.FirebaseToken);
 			return new Success(responseDto);

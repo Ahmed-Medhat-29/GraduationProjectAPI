@@ -3,18 +3,18 @@ using GraduationProjectAPI.Models;
 
 namespace GraduationProjectAPI.DTOs.Response.Chats
 {
-	public class ChatResponseDto
+	public class ChatDto
 	{
 		public string Message { get; set; }
 		public DateTime DateTime { get; set; }
 		public string Type { get; set; }
 
-		public ChatResponseDto()
+		public ChatDto()
 		{
 
 		}
 
-		public ChatResponseDto(Chat chat)
+		public ChatDto(Chat chat)
 		{
 			Message = chat.Message;
 			DateTime = chat.DateTime;
