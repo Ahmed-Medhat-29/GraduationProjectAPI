@@ -70,11 +70,18 @@ namespace GraduationProjectAPI.Controllers
 		[HttpGet("case-history/{id:min(1)}")]
 		public async Task<IActionResult> CaseHistory(int id)
 		{
-			var total = await _context.Cases.Where(c => c.Id == id)
-				.Select(c => c.NeededMoneyAmount)
+			var @case = await _context.Cases
+				.Where(c => c.Id == id)
+				.Select(c => new
+				{
+					c.NeededMoneyAmount,
+					c.PaymentDate,
+					c.CurrentRound,
+					c.PeriodId
+				})
 				.FirstOrDefaultAsync();
 
-			if (total == 0)
+			if (@case == null)
 				return new BadRequest("Case not found");
 
 			var history = await _context.CasePayments
@@ -83,24 +90,44 @@ namespace GraduationProjectAPI.Controllers
 				{
 					Name = cp.Mediator.Name,
 					Amount = cp.Amount,
+					RoundNumber = cp.RoundNnumber,
 					Datetime = (DateTime)cp.DateDelivered,
 					ImageUrl = cp.Case.Images.Select(i => Paths.CaseImage(i.Id)).FirstOrDefault()
 
 				}).ToArrayAsync();
 
-			var paid = 0;
-			foreach (var item in history)
-				paid += item.Amount;
-
-			var paymentHistory = new CasePaymentHistoryDto
+			if(@case.PeriodId == Enums.PeriodType.OneTime || history == null)
 			{
-				Total = total,
-				Paid = paid,
-				Remaining = total - paid,
-				History = history
-			};
+				var paid = history.Sum(h => h.Amount);
+				//var paid = 0;
+				//foreach (var item in history)
+				//	paid += item.Amount;
 
-			return new Success(paymentHistory);
+				var paymentHistory = new CasePaymentHistoryDto
+				{
+					Total = @case.NeededMoneyAmount,
+					Paid = paid,
+					History = history
+				};
+
+				return new Success(paymentHistory);
+			}
+
+			var paymentHistorys = new List<CasePaymentHistoryDto>();
+			for (int i = (int)@case.CurrentRound; i > 0; i--)
+			{
+				var paid = history.Where(h => h.RoundNumber == i).Sum(h => h.Amount);
+				var paymentHistory = new CasePaymentHistoryDto
+				{
+					Total = @case.NeededMoneyAmount,
+					Paid = paid,
+					RoundNumber = i,
+					History = history.Where(h => h.RoundNumber == i).ToArray()
+				};
+				paymentHistorys.Add(paymentHistory);
+			}
+
+			return new Success(paymentHistorys);
 		}
 
 		[HttpGet("[action]")]

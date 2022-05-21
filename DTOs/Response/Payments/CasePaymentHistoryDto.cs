@@ -6,7 +6,7 @@ namespace GraduationProjectAPI.DTOs.Response.Payments
 	{
 		public int Total { get; set; }
 		public int Paid { get; set; }
-		public int Remaining { get; set; }
+		public int RoundNumber { get; set; }
 		public IEnumerable<PaymentElementDto> History { get; set; }
 	}
 }

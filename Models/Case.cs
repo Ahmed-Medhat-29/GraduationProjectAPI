@@ -36,6 +36,8 @@ namespace GraduationProjectAPI.Models
 		[Column(TypeName = "date")]
 		public DateTime PaymentDate { get; set; }
 
+		public int? CurrentRound { get; set; }
+
 		[Column(TypeName = "date")]
 		public DateTime DateRequested { get; private set; } = DateTime.Now;
 

@@ -4,15 +4,17 @@ using GraduationProjectAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NetTopologySuite.Geometries;
 
 namespace GraduationProjectAPI.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220520173604_RemoveWeeklyPeriod")]
+    partial class RemoveWeeklyPeriod
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -42,9 +44,6 @@ namespace GraduationProjectAPI.Migrations
 
                     b.Property<byte>("Children")
                         .HasColumnType("tinyint");
-
-                    b.Property<int?>("CurrentRound")
-                        .HasColumnType("int");
 
                     b.Property<DateTime>("DateRequested")
                         .HasColumnType("date");
@@ -165,9 +164,6 @@ namespace GraduationProjectAPI.Migrations
                         .HasColumnType("datetime2(0)");
 
                     b.Property<int>("MediatorId")
-                        .HasColumnType("int");
-
-                    b.Property<int?>("RoundNnumber")
                         .HasColumnType("int");
 
                     b.HasKey("Id");

@@ -87,6 +87,7 @@ namespace GraduationProjectAPI.DTOs.Request.Cases
 				Title = Title,
 				Story = Story,
 				NeededMoneyAmount = NeededMoneyAmount,
+				CurrentRound = PeriodId == PeriodType.Monthly ? 1 : null,
 				PaymentDate = PaymentDate,
 				Adults = Adults,
 				Children = Children,

@@ -17,6 +17,8 @@ namespace GraduationProjectAPI.Models
 
 		public int Amount { get; set; }
 
+		public int? RoundNnumber { get; set; }
+
 		[Column(TypeName = "datetime2(0)")]
 		public DateTime DateSubmitted { get; set; }
 
