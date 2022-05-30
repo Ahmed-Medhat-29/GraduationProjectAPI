@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
 using GraduationProjectAPI.Data;
+using GraduationProjectAPI.DTOs.Request.Payments;
 using GraduationProjectAPI.DTOs.Response.Payments;
 using GraduationProjectAPI.Models;
+using GraduationProjectAPI.Models.CaseProperties;
 using GraduationProjectAPI.Utilities.CustomApiResponses;
 using GraduationProjectAPI.Utilities.General;
 using GraduationProjectAPI.Utilities.StaticStrings;
@@ -31,7 +32,7 @@ namespace GraduationProjectAPI.Controllers
 		public async Task<IActionResult> Wallet()
 		{
 			var receive = await _context.CasePayments
-				.Where(cp => cp.MediatorId == GetUserId())
+				.Where(cp => cp.MediatorId == UserHandler.GetId(User))
 				.Select(cp => new TransactionElement
 				{
 					CaseId = cp.CaseId,
@@ -42,7 +43,7 @@ namespace GraduationProjectAPI.Controllers
 				}).ToArrayAsync();
 
 			var paid = await _context.CasePayments
-				.Where(cp => cp.MediatorId == GetUserId() && cp.DateDelivered != null)
+				.Where(cp => cp.MediatorId == UserHandler.GetId(User) && cp.DateDelivered != null)
 				.Select(cp => new TransactionElement
 				{
 					CaseId = cp.CaseId,
@@ -54,7 +55,7 @@ namespace GraduationProjectAPI.Controllers
 
 			var transactions = receive.Union(paid).OrderByDescending(t => t.DateTime);
 			var wallet = await _context.Mediators
-				.Where(m => m.Id == GetUserId())
+				.Where(m => m.Id == UserHandler.GetId(User))
 				.Select(m => new WalletDto
 				{
 					Name = m.Name,
@@ -84,7 +85,7 @@ namespace GraduationProjectAPI.Controllers
 			if (@case == null)
 				return new BadRequest("Case not found");
 
-			var history = await _context.CasePayments
+			IEnumerable<PaymentElementDto> history = await _context.CasePayments
 				.Where(cp => cp.CaseId == id && cp.DateDelivered != null)
 				.Select(cp => new PaymentElementDto
 				{
@@ -96,34 +97,31 @@ namespace GraduationProjectAPI.Controllers
 
 				}).ToArrayAsync();
 
-			if(@case.PeriodId == Enums.PeriodType.OneTime || history == null)
+			var paymentHistorys = new List<CasePaymentHistoryDto>();
+			if (@case.PeriodId == Enums.PeriodType.OneTime)
 			{
-				var paid = history.Sum(h => h.Amount);
-				//var paid = 0;
-				//foreach (var item in history)
-				//	paid += item.Amount;
-
 				var paymentHistory = new CasePaymentHistoryDto
 				{
 					Total = @case.NeededMoneyAmount,
-					Paid = paid,
+					Paid = history.Sum(h => h.Amount),
+					PaymentDate = @case.PaymentDate,
 					History = history
 				};
 
-				return new Success(paymentHistory);
+				paymentHistorys.Add(paymentHistory);
+				return new Success(paymentHistorys);
 			}
 
-			var paymentHistorys = new List<CasePaymentHistoryDto>();
 			for (int i = (int)@case.CurrentRound; i > 0; i--)
 			{
-				var paid = history.Where(h => h.RoundNumber == i).Sum(h => h.Amount);
 				var paymentHistory = new CasePaymentHistoryDto
 				{
 					Total = @case.NeededMoneyAmount,
-					Paid = paid,
-					RoundNumber = i,
+					Paid = history.Where(h => h.RoundNumber == i).Sum(h => h.Amount),
+					PaymentDate = @case.PaymentDate.AddMonths(i - (int)@case.CurrentRound),
 					History = history.Where(h => h.RoundNumber == i).ToArray()
 				};
+
 				paymentHistorys.Add(paymentHistory);
 			}
 
@@ -136,13 +134,13 @@ namespace GraduationProjectAPI.Controllers
 			if (page <= 0) return NotFound(null);
 
 			var casesCount = await _context.CasePayments
-				.CountAsync(cp => cp.DateDelivered == null && cp.MediatorId == GetUserId());
+				.CountAsync(cp => cp.DateDelivered == null && cp.MediatorId == UserHandler.GetId(User));
 
 			if (casesCount <= 0)
 				return new SuccessWithPagination(Array.Empty<object>(), new Pagination(page));
 
 			var cases = await _context.CasePayments
-				.Where(cp => cp.DateDelivered == null && cp.MediatorId == GetUserId())
+				.Where(cp => cp.DateDelivered == null && cp.MediatorId == UserHandler.GetId(User))
 				.Skip(Pagination.MaxPageSize * (page - 1))
 				.Take(Pagination.MaxPageSize)
 				.Select(cp => new CasePaymentElementDto
@@ -180,8 +178,8 @@ namespace GraduationProjectAPI.Controllers
 			return new SuccessWithPagination(cases, new Pagination(page, casesCount, cases.Length));
 		}
 
-		[HttpPost("[action]/{id:min(1)}")]
-		public async Task<IActionResult> Confirm(int id)
+		[HttpPost("[action]")]
+		public async Task<IActionResult> Confirm([FromForm] CasePaymentConfirmationDto dto)
 		{
 			var casePayment = await _context.CasePayments
 				.Select(cp => new CasePayment
@@ -190,7 +188,7 @@ namespace GraduationProjectAPI.Controllers
 					Amount = cp.Amount,
 					DateDelivered = cp.DateDelivered
 				})
-				.FirstOrDefaultAsync(cp => cp.Id == id);
+				.FirstOrDefaultAsync(cp => cp.Id == dto.Id);
 
 			if (casePayment == null)
 				return new BadRequest("Transaction was not found");
@@ -203,24 +201,20 @@ namespace GraduationProjectAPI.Controllers
 				{
 					Id = m.Id,
 					Balance = m.Balance
-				}).FirstAsync(m => m.Id == GetUserId());
+				}).FirstAsync(m => m.Id == UserHandler.GetId(User));
 
 			if (mediator.Balance < casePayment.Amount)
 				return new BadRequest("Insufficient balance");
 
 			_context.CasePayments.Attach(casePayment);
 			casePayment.DateDelivered = DateTime.Now;
+			casePayment.Details = dto.Details;
 
 			_context.Mediators.Attach(mediator);
 			mediator.Balance -= casePayment.Amount;
 
 			await _context.SaveChangesAsync();
 			return new Success();
-		}
-
-		private int GetUserId()
-		{
-			return int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 		}
 	}
 }

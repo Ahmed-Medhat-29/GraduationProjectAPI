@@ -1,7 +1,8 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace GraduationProjectAPI.Models
+namespace GraduationProjectAPI.Models.CaseProperties
 {
 	public class CasePayment
 	{
@@ -16,6 +17,9 @@ namespace GraduationProjectAPI.Models
 		public int CaseId { get; set; }
 
 		public int Amount { get; set; }
+
+		[MaxLength(4000)]
+		public string Details { get; set; }
 
 		public int? RoundNnumber { get; set; }
 

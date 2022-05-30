@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GraduationProjectAPI.Utilities.ExtensionMethods
 {
-	public static class CasesQueryExtensions
+	public static class CasesQueryExtenders
 	{
 		public static async Task<CaseElementDto[]> SelectCaseElementDtoAsync(this IQueryable<Case> query)
 		{
@@ -25,9 +25,9 @@ namespace GraduationProjectAPI.Utilities.ExtensionMethods
 					Title = c.Title,
 					Priority = c.Priority.Name,
 					Age = (short)(c.PaymentDate - DateTime.Now).TotalDays,
-					FundRaised = 4000,
+					FundRaised = c.CasePayments.Where(cp => cp.RoundNnumber == c.CurrentRound && cp.DateDelivered != null).Sum(cp => cp.Amount),
 					TotalNeeded = c.NeededMoneyAmount,
-					NumberOfContributer = 32,
+					NumberOfContributer = c.CasePayments.Where(cp => cp.DateDelivered != null).Count(),
 					ImageUrl = c.Images.Select(i => Paths.CaseImage(i.Id)).FirstOrDefault()
 				}).ToArrayAsync();
 		}
@@ -45,9 +45,9 @@ namespace GraduationProjectAPI.Utilities.ExtensionMethods
 					Title = c.Title,
 					Priority = c.Priority.Name,
 					Age = (short)(c.PaymentDate - DateTime.Now).TotalDays,
-					FundRaised = 4000,
+					FundRaised = c.CasePayments.Where(cp => cp.RoundNnumber == c.CurrentRound && cp.DateDelivered != null).Sum(cp => cp.Amount),
 					TotalNeeded = c.NeededMoneyAmount,
-					NumberOfContributer = 32,
+					NumberOfContributer = c.CasePayments.Where(cp => cp.DateDelivered != null).Count(),
 					ImageUrl = c.Images.Select(i => Paths.CaseImage(i.Id)).FirstOrDefault()
 				}).ToArrayAsync();
 		}
@@ -62,6 +62,7 @@ namespace GraduationProjectAPI.Utilities.ExtensionMethods
 					Story = c.Story,
 					Datetime = c.DateRequested,
 					TotalNeeded = c.NeededMoneyAmount,
+					Paid = c.CasePayments.Where(cp => cp.RoundNnumber == c.CurrentRound && cp.DateDelivered != null).Sum(cp => cp.Amount),
 					Mediator = new CaseMediatorDto
 					{
 						Id = c.MediatorId,
@@ -69,11 +70,12 @@ namespace GraduationProjectAPI.Utilities.ExtensionMethods
 						ImageUrl = Paths.ProfilePicture(c.MediatorId)
 					},
 					History = c.CasePayments
-						.Where(cp => cp.DateDelivered != null)
+						.Where(cp => cp.RoundNnumber == c.CurrentRound && cp.DateDelivered != null)
 						.Select(cp => new PaymentElementDto
 						{
 							Name = cp.Mediator.Name,
 							Amount = cp.Amount,
+							RoundNumber = cp.RoundNnumber,
 							Datetime = (DateTime)cp.DateDelivered,
 							ImageUrl = cp.Case.Images.Select(i => Paths.CaseImage(i.Id)).FirstOrDefault()
 						})

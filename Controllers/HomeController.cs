@@ -1,10 +1,10 @@
 ﻿using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
 using GraduationProjectAPI.Data;
 using GraduationProjectAPI.Enums;
 using GraduationProjectAPI.Utilities.CustomApiResponses;
 using GraduationProjectAPI.Utilities.ExtensionMethods;
+using GraduationProjectAPI.Utilities.General;
 using GraduationProjectAPI.Utilities.StaticStrings;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
@@ -29,7 +29,7 @@ namespace GraduationProjectAPI.Controllers
 		public async Task<IActionResult> Mediators()
 		{
 			var userRegionId = await _context.Mediators
-				.Where(m => m.Id == GetUserId())
+				.Where(m => m.Id == UserHandler.GetId(User))
 				.Select(m => m.RegionId)
 				.FirstAsync();
 
@@ -43,14 +43,14 @@ namespace GraduationProjectAPI.Controllers
 				.SelectCaseElementDtoAsync();
 
 			var myCases = await query
-				.Where(c => c.MediatorId == GetUserId() && c.StatusId == StatusType.Accepted)
+				.Where(c => c.MediatorId == UserHandler.GetId(User) && c.StatusId == StatusType.Accepted)
 				.SelectCaseElementDtoAsync();
 
 			var areaCases = await query
 				.Where(c => c.RegionId == userRegionId && c.StatusId == StatusType.Accepted)
 				.SelectCaseElementDtoAsync();
 
-			var user = await _context.Mediators.SelectMediatorDetailsDtoAsync(GetUserId(), await HttpContext.GetTokenAsync("Bearer", "access_token"));
+			var user = await _context.Mediators.SelectMediatorDetailsDtoAsync(UserHandler.GetId(User), await HttpContext.GetTokenAsync("Bearer", "access_token"));
 			return new Success(new { urgentCases, myCases, areaCases, user });
 		}
 
@@ -67,13 +67,6 @@ namespace GraduationProjectAPI.Controllers
 			return new Success(await _context.FAQs
 				.Select(f => new { f.Title, f.Description })
 				.ToArrayAsync());
-		}
-
-		// ********************** Private methods **********************************
-
-		private int GetUserId()
-		{
-			return int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 		}
 	}
 }

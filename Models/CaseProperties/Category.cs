@@ -9,5 +9,7 @@ namespace GraduationProjectAPI.Models.CaseProperties
 
 		[Required, MaxLength(50), Column(TypeName = "varchar")]
 		public string Name { get; set; }
+
+		public byte[] Image { get; set; }
 	}
 }

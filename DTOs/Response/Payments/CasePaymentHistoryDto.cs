@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace GraduationProjectAPI.DTOs.Response.Payments
 {
@@ -6,7 +7,7 @@ namespace GraduationProjectAPI.DTOs.Response.Payments
 	{
 		public int Total { get; set; }
 		public int Paid { get; set; }
-		public int RoundNumber { get; set; }
+		public DateTime PaymentDate { get; set; }
 		public IEnumerable<PaymentElementDto> History { get; set; }
 	}
 }

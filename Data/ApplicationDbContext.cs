@@ -10,6 +10,8 @@ namespace GraduationProjectAPI.Data
 	public class ApplicationDbContext : DbContext
 	{
 		public DbSet<Mediator> Mediators { get; set; }
+		public DbSet<Donator> Donators { get; set; }
+		public DbSet<Admin> Admins { get; set; }
 		public DbSet<Case> Cases { get; set; }
 		public DbSet<Gender> Genders { get; set; }
 		public DbSet<Status> Status { get; set; }

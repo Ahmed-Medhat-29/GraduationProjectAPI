@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using GraduationProjectAPI.Data;
 using GraduationProjectAPI.DTOs.Response;
 using GraduationProjectAPI.DTOs.Response.Cases;
+using GraduationProjectAPI.Models.CaseProperties;
 using GraduationProjectAPI.Models.Shared;
 using GraduationProjectAPI.Utilities.CustomApiResponses;
 using GraduationProjectAPI.Utilities.StaticStrings;
@@ -85,7 +86,13 @@ namespace GraduationProjectAPI.Controllers
 			if (_memoryCache.TryGetValue(nameof(properties), out properties))
 				return new Success(properties);
 
-			var categories = _context.Categories.AsNoTracking().ToArrayAsync();
+			var categories = _context.Categories
+				.Select(c => new Category
+				{
+					Id = c.Id,
+					Name = c.Name
+				}).ToArrayAsync();
+
 			properties = new CaseProperties
 			{
 				Genders = GetGenders(),

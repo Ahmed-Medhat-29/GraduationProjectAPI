@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
 using GraduationProjectAPI.Data;
 using GraduationProjectAPI.DTOs.Request.Cases;
@@ -49,16 +48,16 @@ namespace GraduationProjectAPI.Controllers
 		}
 
 		[HttpGet("mine")]
-		public async Task<IActionResult> MyCases(int page)
+		public async Task<IActionResult> MyCases(int page, StatusType status)
 		{
 			if (page <= 0) return NotFound(null);
 
-			var myCasesCount = await _context.Cases.CountAsync(c => c.MediatorId == GetUserId());
+			var myCasesCount = await _context.Cases.CountAsync(c => c.MediatorId == UserHandler.GetId(User));
 			if (myCasesCount <= 0)
 				return new SuccessWithPagination(Array.Empty<object>(), new Pagination(page));
 
 			var myCases = await _context.Cases
-				.Where(c => c.MediatorId == GetUserId())
+				.Where(c => c.MediatorId == UserHandler.GetId(User) && c.StatusId == status)
 				.SelectCaseElementDtoAsync(page);
 
 			return new SuccessWithPagination(myCases, new Pagination(page, myCasesCount, myCases.Length));
@@ -70,7 +69,7 @@ namespace GraduationProjectAPI.Controllers
 			if (page <= 0) return NotFound(null);
 
 			var userRegionId = await _context.Mediators
-				.Where(m => m.Id == GetUserId())
+				.Where(m => m.Id == UserHandler.GetId(User))
 				.Select(m => m.RegionId)
 				.FirstOrDefaultAsync();
 
@@ -103,7 +102,7 @@ namespace GraduationProjectAPI.Controllers
 		[HttpPost]
 		public async Task<IActionResult> Add([FromForm] NewCaseDto dto)
 		{
-			var newCase = dto.ToCase(GetUserId());
+			var newCase = dto.ToCase(UserHandler.GetId(User));
 			await _context.AddAsync(newCase);
 			await _context.SaveChangesAsync();
 			_ = SendNotificationForNewCaseAsync(newCase);
@@ -156,11 +155,6 @@ namespace GraduationProjectAPI.Controllers
 				await context.SaveChangesAsync();
 				await handler.SendAsync(mediator.FirebaseToken);
 			}
-		}
-
-		private int GetUserId()
-		{
-			return int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 		}
 	}
 }

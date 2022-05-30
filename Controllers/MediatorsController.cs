@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
 using GraduationProjectAPI.Data;
 using GraduationProjectAPI.DTOs.Request;
@@ -58,13 +57,13 @@ namespace GraduationProjectAPI.Controllers
 		[HttpGet("[action]")]
 		public async Task<IActionResult> Profile()
 		{
-			return new Success(await _context.Mediators.SelectProfileDtoAsync(GetUserId()));
+			return new Success(await _context.Mediators.SelectProfileDtoAsync(UserHandler.GetId(User)));
 		}
 
 		[HttpPatch("[action]")]
 		public async Task<IActionResult> Profile([FromForm] CompleteProfileDto dto)
 		{
-			var mediator = new Mediator(GetUserId());
+			var mediator = new Mediator(UserHandler.GetId(User));
 			_context.Mediators.Attach(mediator);
 			dto.UpdateMediator(mediator);
 			await _context.SaveChangesAsync();
@@ -90,14 +89,14 @@ namespace GraduationProjectAPI.Controllers
 		{
 			if (page <= 0) return NotFound(null);
 
-			var notificationsCount = await _context.Notifications.CountAsync(n => n.MediatorId == GetUserId());
+			var notificationsCount = await _context.Notifications.CountAsync(n => n.MediatorId == UserHandler.GetId(User));
 			if (notificationsCount <= 0)
 				return new SuccessWithPagination(Array.Empty<object>(), new Pagination(page));
 
-			var notifications = await _context.Notifications.SelectNotificationsAsync(GetUserId(), page);
+			var notifications = await _context.Notifications.SelectNotificationsAsync(UserHandler.GetId(User), page);
 			var pagination = new Pagination(page, notificationsCount, notifications.Length);
 			if (notifications.Any(n => !n.IsRead))
-				_ = SetNotificationsAsReadAsync(GetUserId());
+				_ = SetNotificationsAsReadAsync(UserHandler.GetId(User));
 
 			return new SuccessWithPagination(notifications, pagination);
 		}
@@ -169,11 +168,6 @@ namespace GraduationProjectAPI.Controllers
 				mediator.FirebaseToken = token;
 				await context.SaveChangesAsync();
 			}
-		}
-
-		private int GetUserId()
-		{
-			return int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 		}
 	}
 }

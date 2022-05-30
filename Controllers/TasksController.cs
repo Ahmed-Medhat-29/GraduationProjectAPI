@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
 using GraduationProjectAPI.Data;
 using GraduationProjectAPI.DTOs.Request;
@@ -37,13 +36,13 @@ namespace GraduationProjectAPI.Controllers
 			if (page <= 0) return NotFound(null);
 
 			var pendingMediatorsCount = await _context.Mediators
-				.CountAsync(m => m.StatusId == StatusType.Pending && !m.ReviewsAboutMe.Any(r => r.ReviewerId == GetUserId()));
+				.CountAsync(m => m.StatusId == StatusType.Pending && !m.ReviewsAboutMe.Any(r => r.ReviewerId == UserHandler.GetId(User)));
 
 			if (pendingMediatorsCount <= 0)
 				return new SuccessWithPagination(Array.Empty<object>(), new Pagination(page));
 
 			var pendingMediators = await _context.Mediators
-				.SelectMediatorTaskElementDtoAsync(GetUserId(), page);
+				.SelectMediatorTaskElementDtoAsync(UserHandler.GetId(User), page);
 
 			return new SuccessWithPagination(pendingMediators, new Pagination(page, pendingMediatorsCount, pendingMediators.Length));
 		}
@@ -51,7 +50,7 @@ namespace GraduationProjectAPI.Controllers
 		[HttpGet("pending-mediators/{id:min(1)}")]
 		public async Task<IActionResult> PendingMediator(int id)
 		{
-			var mediator = await _context.Mediators.SelectMediatorTaskDetailsDtoAsync(id, GetUserId());
+			var mediator = await _context.Mediators.SelectMediatorTaskDetailsDtoAsync(id, UserHandler.GetId(User));
 			if (mediator == null)
 				return NotFound(null);
 
@@ -64,13 +63,13 @@ namespace GraduationProjectAPI.Controllers
 			if (page <= 0) return NotFound(null);
 
 			var pendingCasesCount = await _context.Cases
-				.CountAsync(c => c.StatusId == StatusType.Pending && c.MediatorId != GetUserId() && !c.CaseReviews.Any(r => r.MediatorId == GetUserId()));
+				.CountAsync(c => c.StatusId == StatusType.Pending && c.MediatorId != UserHandler.GetId(User) && !c.CaseReviews.Any(r => r.MediatorId == UserHandler.GetId(User)));
 
 			if (pendingCasesCount <= 0)
 				return new SuccessWithPagination(Array.Empty<object>(), new Pagination(page));
 
 			var pendingCases = await _context.Cases
-				.SelectCaseTaskElementDtoAsync(GetUserId(), page);
+				.SelectCaseTaskElementDtoAsync(UserHandler.GetId(User), page);
 
 			return new SuccessWithPagination(pendingCases, new Pagination(page, pendingCasesCount, pendingCases.Length));
 		}
@@ -78,7 +77,7 @@ namespace GraduationProjectAPI.Controllers
 		[HttpGet("pending-cases/{id:min(1)}")]
 		public async Task<IActionResult> PendingCase(int id)
 		{
-			var @case = await _context.Cases.SelectCaseTaskDetailsDtoAsync(id, GetUserId());
+			var @case = await _context.Cases.SelectCaseTaskDetailsDtoAsync(id, UserHandler.GetId(User));
 			if (@case == null)
 				return NotFound(null);
 
@@ -93,16 +92,16 @@ namespace GraduationProjectAPI.Controllers
 		[HttpPost("review-mediator")]
 		public async Task<IActionResult> ReviewMediator([FromForm] NewReviewDto dto)
 		{
-			if (dto.RevieweeId == GetUserId())
+			if (dto.RevieweeId == UserHandler.GetId(User))
 				return new BadRequest("You can't review yourself");
 
 			if (!await _context.Mediators.AnyAsync(m => m.Id == dto.RevieweeId && m.StatusId == StatusType.Pending))
 				return new BadRequest("No pending mediator with such id found");
 
-			if (await _context.MediatorReviews.AnyAsync(m => m.RevieweeId == dto.RevieweeId && m.ReviewerId == GetUserId()))
+			if (await _context.MediatorReviews.AnyAsync(m => m.RevieweeId == dto.RevieweeId && m.ReviewerId == UserHandler.GetId(User)))
 				return new BadRequest("You have reviewed this mediator already");
 
-			await _context.MediatorReviews.AddAsync(dto.ToMediatorReview(GetUserId()));
+			await _context.MediatorReviews.AddAsync(dto.ToMediatorReview(UserHandler.GetId(User)));
 			await _context.SaveChangesAsync();
 			_ = CheckAndUpdateMediatorStatus(dto.RevieweeId);
 			return new Success();
@@ -114,21 +113,16 @@ namespace GraduationProjectAPI.Controllers
 			if (!await _context.Cases.AnyAsync(c => c.Id == dto.RevieweeId))
 				return new BadRequest("Case was not found");
 
-			if (await _context.CaseReviews.AnyAsync(c => c.CaseId == dto.RevieweeId && c.MediatorId == GetUserId()))
+			if (await _context.CaseReviews.AnyAsync(c => c.CaseId == dto.RevieweeId && c.MediatorId == UserHandler.GetId(User)))
 				return new BadRequest("Case has been reviewd already");
 
-			await _context.CaseReviews.AddAsync(dto.ToCaseReview(GetUserId()));
+			await _context.CaseReviews.AddAsync(dto.ToCaseReview(UserHandler.GetId(User)));
 			await _context.SaveChangesAsync();
 			_ = CheckAndUpdateCaseStatus(dto.RevieweeId);
 			return new Success();
 		}
 
 		// ************************ Private methods ************************
-
-		private int GetUserId()
-		{
-			return int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-		}
 
 		private async Task CheckAndUpdateMediatorStatus(int id)
 		{

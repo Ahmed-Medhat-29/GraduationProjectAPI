@@ -11,6 +11,7 @@ namespace GraduationProjectAPI.DTOs.Response.Cases
 		public string Story { get; set; }
 		public DateTime Datetime { get; set; }
 		public int TotalNeeded { get; set; }
+		public int Paid { get; set; }
 		public CaseMediatorDto Mediator { get; set; }
 		public IEnumerable<string> ImagesUrls { get; set; }
 		public IEnumerable<PaymentElementDto> History { get; set; }

@@ -1,5 +1,4 @@
 ﻿using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
 using GraduationProjectAPI.Data;
 using GraduationProjectAPI.DTOs.Request.Chats;
@@ -33,7 +32,7 @@ namespace GraduationProjectAPI.Controllers
 		public async Task<IActionResult> Chat()
 		{
 			var chat = await _context.Chats
-				.Where(c => c.MediatorId == GetUserId())
+				.Where(c => c.MediatorId == UserHandler.GetId(User))
 				.Select(c => new ChatDto
 				{
 					Message = c.Message,
@@ -48,7 +47,7 @@ namespace GraduationProjectAPI.Controllers
 		[HttpPost("[action]")]
 		public async Task<IActionResult> Message([FromForm] NewChatDto dto)
 		{
-			var chat = dto.ToChat(GetUserId(), Enums.MessageType.Sent);
+			var chat = dto.ToChat(UserHandler.GetId(User), Enums.MessageType.Sent);
 			await _context.Chats.AddAsync(chat);
 			await _context.SaveChangesAsync();
 			return new Success();
@@ -81,11 +80,6 @@ namespace GraduationProjectAPI.Controllers
 
 			var handler = new NotificationHandler(new ChatDto(chat));
 			await handler.SendAsync(firebaseToken);
-		}
-
-		private int GetUserId()
-		{
-			return int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
 		}
 	}
 }
