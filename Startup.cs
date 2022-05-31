@@ -61,16 +61,15 @@ namespace GraduationProjectAPI
 		public void Configure(IApplicationBuilder app)
 		{
 			app.UseDeveloperExceptionPage();
-			//app.UseStaticFiles();
 			app.Use(async (context, next) =>
 			{
 				//new Task(() =>
 				//{
-				//	if (context.Request.Method == "POST" && !string.IsNullOrWhiteSpace(context.Request.ContentType))
+				//	if (context.Request.Method.ToUpper() == "POST" && !string.IsNullOrWhiteSpace(context.Request.ContentType))
 				//		HttpRequestLogger.Log(context.Request);
 				//}).Start();
 
-				Paths.InitCommon(context.Request);
+				Paths.InitBaseURL(context.Request);
 				await next.Invoke();
 			});
 

@@ -4,15 +4,17 @@ using GraduationProjectAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NetTopologySuite.Geometries;
 
 namespace GraduationProjectAPI.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20220531152515_ModifyPhoneNumberAndNationalIdTochar")]
+    partial class ModifyPhoneNumberAndNationalIdTochar
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -53,7 +55,7 @@ namespace GraduationProjectAPI.Migrations
                     b.Property<string>("NationalId")
                         .IsRequired()
                         .HasMaxLength(14)
-                        .HasColumnType("char(14)");
+                        .HasColumnType("varchar(14)");
 
                     b.Property<byte[]>("NationalIdImage")
                         .IsRequired()
@@ -67,7 +69,7 @@ namespace GraduationProjectAPI.Migrations
                     b.Property<string>("PhoneNumber")
                         .IsRequired()
                         .HasMaxLength(11)
-                        .HasColumnType("char(11)");
+                        .HasColumnType("varchar(11)");
 
                     b.Property<byte[]>("ProfileImage")
                         .IsRequired()
@@ -128,7 +130,7 @@ namespace GraduationProjectAPI.Migrations
                     b.Property<string>("NationalId")
                         .IsRequired()
                         .HasMaxLength(14)
-                        .HasColumnType("char(14)");
+                        .HasColumnType("varchar(14)");
 
                     b.Property<byte[]>("NationalIdImage")
                         .HasColumnType("varbinary(max)");
@@ -145,7 +147,7 @@ namespace GraduationProjectAPI.Migrations
                     b.Property<string>("PhoneNumber")
                         .IsRequired()
                         .HasMaxLength(11)
-                        .HasColumnType("char(11)");
+                        .HasColumnType("varchar(11)");
 
                     b.Property<byte>("PriorityId")
                         .HasColumnType("tinyint");
@@ -444,7 +446,7 @@ namespace GraduationProjectAPI.Migrations
                     b.Property<string>("PhoneNumber")
                         .IsRequired()
                         .HasMaxLength(11)
-                        .HasColumnType("char(11)");
+                        .HasColumnType("varchar(11)");
 
                     b.HasKey("Id");
 

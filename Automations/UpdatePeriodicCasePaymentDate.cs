@@ -51,7 +51,7 @@ namespace GraduationProjectAPI.Automations
 		private async Task<IEnumerable<Case>> GetPeriodicCasesAsync(ApplicationDbContext context)
 		{
 			return await context.Cases
-						.Where(c => c.StatusId != Enums.StatusType.Rejected &&
+						.Where(c => c.StatusId == Enums.StatusType.Accepted &&
 									c.PaymentDate < DateTime.Now &&
 									c.PeriodId == Enums.PeriodType.Monthly)
 						.Select(c => new Case

@@ -18,10 +18,10 @@ namespace GraduationProjectAPI.Models
 		[Required, MaxLength(250)]
 		public string Name { get; set; }
 
-		[Required, MaxLength(11), Column(TypeName = "varchar")]
+		[Required, MaxLength(11), Column(TypeName = "char")]
 		public string PhoneNumber { get; set; }
 
-		[Required, MaxLength(14), Column(TypeName = "varchar")]
+		[Required, MaxLength(14), Column(TypeName = "char")]
 		public string NationalId { get; set; }
 
 		[Column(TypeName = "date")]

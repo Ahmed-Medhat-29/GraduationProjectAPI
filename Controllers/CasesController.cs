@@ -4,10 +4,11 @@ using System.Threading.Tasks;
 using GraduationProjectAPI.Data;
 using GraduationProjectAPI.DTOs.Request.Cases;
 using GraduationProjectAPI.DTOs.Response;
+using GraduationProjectAPI.DTOs.Response.Cases;
+using GraduationProjectAPI.DTOs.Response.Payments;
 using GraduationProjectAPI.Enums;
 using GraduationProjectAPI.Models;
 using GraduationProjectAPI.Utilities.CustomApiResponses;
-using GraduationProjectAPI.Utilities.ExtensionMethods;
 using GraduationProjectAPI.Utilities.General;
 using GraduationProjectAPI.Utilities.StaticStrings;
 using Microsoft.AspNetCore.Authorization;
@@ -42,7 +43,21 @@ namespace GraduationProjectAPI.Controllers
 
 			var urgentCases = await _context.Cases
 				.Where(c => c.PriorityId == PriorityType.Urgent && c.StatusId == StatusType.Accepted)
-				.SelectCaseElementDtoAsync(page);
+				.OrderByDescending(c => c.DateRequested)
+				.Skip(Pagination.MaxPageSize * (page - 1))
+				.Take(Pagination.MaxPageSize)
+				.Select(c => new CaseElementDto
+				{
+					Id = c.Id,
+					Name = c.Name,
+					Title = c.Title,
+					Priority = c.Priority.Name,
+					Age = (short)(c.PaymentDate - DateTime.Now).TotalDays,
+					FundRaised = c.CasePayments.Where(cp => cp.RoundNnumber == c.CurrentRound && cp.DateDelivered != null).Sum(cp => cp.Amount),
+					TotalNeeded = c.NeededMoneyAmount,
+					NumberOfContributer = c.CasePayments.Where(cp => cp.DateDelivered != null).Count(),
+					ImageUrl = c.Images.Select(i => Paths.CaseImage(i.Id)).FirstOrDefault()
+				}).ToArrayAsync();
 
 			return new SuccessWithPagination(urgentCases, new Pagination(page, urgentCasesCount, urgentCases.Length));
 		}
@@ -58,7 +73,21 @@ namespace GraduationProjectAPI.Controllers
 
 			var myCases = await _context.Cases
 				.Where(c => c.MediatorId == UserHandler.GetId(User) && c.StatusId == status)
-				.SelectCaseElementDtoAsync(page);
+				.OrderByDescending(c => c.DateRequested)
+				.Skip(Pagination.MaxPageSize * (page - 1))
+				.Take(Pagination.MaxPageSize)
+				.Select(c => new CaseElementDto
+				{
+					Id = c.Id,
+					Name = c.Name,
+					Title = c.Title,
+					Priority = c.Priority.Name,
+					Age = (short)(c.PaymentDate - DateTime.Now).TotalDays,
+					FundRaised = c.CasePayments.Where(cp => cp.RoundNnumber == c.CurrentRound && cp.DateDelivered != null).Sum(cp => cp.Amount),
+					TotalNeeded = c.NeededMoneyAmount,
+					NumberOfContributer = c.CasePayments.Where(cp => cp.DateDelivered != null).Count(),
+					ImageUrl = c.Images.Select(i => Paths.CaseImage(i.Id)).FirstOrDefault()
+				}).ToArrayAsync();
 
 			return new SuccessWithPagination(myCases, new Pagination(page, myCasesCount, myCases.Length));
 		}
@@ -82,7 +111,21 @@ namespace GraduationProjectAPI.Controllers
 
 			var areaCases = await _context.Cases
 				.Where(c => c.StatusId == StatusType.Accepted && c.RegionId == userRegionId)
-				.SelectCaseElementDtoAsync(page);
+				.OrderByDescending(c => c.DateRequested)
+				.Skip(Pagination.MaxPageSize * (page - 1))
+				.Take(Pagination.MaxPageSize)
+				.Select(c => new CaseElementDto
+				{
+					Id = c.Id,
+					Name = c.Name,
+					Title = c.Title,
+					Priority = c.Priority.Name,
+					Age = (short)(c.PaymentDate - DateTime.Now).TotalDays,
+					FundRaised = c.CasePayments.Where(cp => cp.RoundNnumber == c.CurrentRound && cp.DateDelivered != null).Sum(cp => cp.Amount),
+					TotalNeeded = c.NeededMoneyAmount,
+					NumberOfContributer = c.CasePayments.Where(cp => cp.DateDelivered != null).Count(),
+					ImageUrl = c.Images.Select(i => Paths.CaseImage(i.Id)).FirstOrDefault()
+				}).ToArrayAsync();
 
 			return new SuccessWithPagination(areaCases, new Pagination(page, areaCasesCount, areaCases.Length));
 		}
@@ -90,12 +133,41 @@ namespace GraduationProjectAPI.Controllers
 		[HttpGet("{id:min(1)}")]
 		public async Task<IActionResult> GetCase(int id)
 		{
-			var @case = await _context.Cases.SelectCaseInfoDtoAsync(id);
+			var @case = await _context.Cases
+				.Select(c => new CaseDetailsDto
+				{
+					Id = c.Id,
+					Title = c.Title,
+					Story = c.Story,
+					Datetime = c.DateRequested,
+					TotalNeeded = c.NeededMoneyAmount,
+					Paid = c.CasePayments.Where(cp => cp.RoundNnumber == c.CurrentRound && cp.DateDelivered != null).Sum(cp => cp.Amount),
+					Mediator = new CaseMediatorDto
+					{
+						Id = c.MediatorId,
+						Name = c.Mediator.Name,
+						ImageUrl = Paths.ProfilePicture(c.MediatorId)
+					},
+					History = c.CasePayments
+						.Where(cp => cp.RoundNnumber == c.CurrentRound && cp.DateDelivered != null)
+						.Select(cp => new PaymentElementDto
+						{
+							Name = cp.Mediator.Name,
+							Amount = cp.Amount,
+							RoundNumber = cp.RoundNnumber,
+							Datetime = (DateTime)cp.DateDelivered,
+							ImageUrl = cp.Case.Images.Select(i => Paths.CaseImage(i.Id)).FirstOrDefault()
+						})
+				})
+				.FirstOrDefaultAsync(c => c.Id == id);
 
 			if (@case == null)
 				return NotFound(null);
 
-			@case.ImagesUrls = await _context.Cases.SelectCaseImagesUrlsAsync(@case.Id);
+			@case.ImagesUrls = await _context.Cases.Where(c => c.Id == @case.Id)
+				.Select(c => c.Images.Select(i => Paths.CaseImage(i.Id)))
+				.FirstOrDefaultAsync();
+
 			return new Success(@case);
 		}
 

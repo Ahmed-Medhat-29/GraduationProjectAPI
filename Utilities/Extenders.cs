@@ -1,8 +1,8 @@
 ﻿using GraduationProjectAPI.Enums;
 
-namespace GraduationProjectAPI.Utilities.ExtensionMethods
+namespace GraduationProjectAPI.Utilities
 {
-	public static class GeneralExtenders
+	public static class Extenders
 	{
 		public static string ToEnumString(this PeriodType periodType)
 		{

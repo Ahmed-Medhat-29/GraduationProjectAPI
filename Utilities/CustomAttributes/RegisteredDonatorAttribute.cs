@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using GraduationProjectAPI.Data;
 using GraduationProjectAPI.DTOs.Request.Donators;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace GraduationProjectAPI.Utilities.CustomAttributes
 {
@@ -11,11 +12,11 @@ namespace GraduationProjectAPI.Utilities.CustomAttributes
 	{
 		protected override ValidationResult IsValid(object value, ValidationContext validationContext)
 		{
-			var dto = value as SignInRequestDto;
-			var context = (ApplicationDbContext)validationContext.GetService(typeof(ApplicationDbContext));
-			var IsRegistered = context.Donators.Any(m => m.PhoneNumber == dto.PhoneNumber);
+			var dto = value as SignInRequestDto ?? throw new InvalidCastException($"Object must be of type {nameof(SignInRequestDto)}");
+			var context = validationContext.GetService<ApplicationDbContext>();
+			var isRegistered = context.Donators.Any(m => m.PhoneNumber == dto.PhoneNumber);
 
-			if (IsRegistered)
+			if (isRegistered)
 				return ValidationResult.Success;
 
 			return new ValidationResult("Please register first");

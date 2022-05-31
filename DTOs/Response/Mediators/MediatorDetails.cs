@@ -18,6 +18,7 @@ namespace GraduationProjectAPI.DTOs.Response.Mediators
 		public string FirebaseToken { get; set; }
 		public string Gender { get; set; }
 		public string Region { get; set; }
+		public int? RegionId { get; set; }
 		public string SocialStatus { get; set; }
 		public string Locale { get; set; }
 		public string Status { get; set; }

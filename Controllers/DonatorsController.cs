@@ -2,10 +2,10 @@
 using System.Threading.Tasks;
 using GraduationProjectAPI.Data;
 using GraduationProjectAPI.DTOs.Request.Donators;
+using GraduationProjectAPI.DTOs.Response.Donators;
 using GraduationProjectAPI.Models;
 using GraduationProjectAPI.Utilities.AuthenticationConfigurations;
 using GraduationProjectAPI.Utilities.CustomApiResponses;
-using GraduationProjectAPI.Utilities.ExtensionMethods;
 using GraduationProjectAPI.Utilities.StaticStrings;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -42,8 +42,17 @@ namespace GraduationProjectAPI.Controllers
 		[HttpPost("[action]")]
 		public async Task<IActionResult> SignIn([FromForm] SignInRequestDto dto, [FromServices] IAuthenticationTokenGenerator tokenGenerator)
 		{
-			var responseDto = await _context.Donators.SelectDonatorDetailsDtoAsync(tokenGenerator, dto.PhoneNumber);
-			responseDto.FirebaseToken = dto.FirebaseToken;
+			var responseDto = await _context.Donators
+				.Select(d => new DonatorDetails
+				{
+					Name = d.Name,
+					PhoneNumber = d.PhoneNumber,
+					JwtToken = tokenGenerator.Generate(d.Id.ToString(), Roles.Donator),
+					FirebaseToken = dto.FirebaseToken,
+					Locale = d.LocaleId.ToString()
+				})
+				.FirstAsync(d => d.PhoneNumber == dto.PhoneNumber);
+
 			_ = UpdateFirebaseTokenAsync(dto.PhoneNumber, dto.FirebaseToken);
 			return new Success(responseDto);
 		}

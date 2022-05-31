@@ -2,8 +2,10 @@
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using GraduationProjectAPI.Data;
+using GraduationProjectAPI.DTOs.Request.Cases;
 using GraduationProjectAPI.DTOs.Request.Mediators;
 using GraduationProjectAPI.Enums;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace GraduationProjectAPI.Utilities.CustomAttributes
 {
@@ -12,8 +14,8 @@ namespace GraduationProjectAPI.Utilities.CustomAttributes
 	{
 		protected override ValidationResult IsValid(object value, ValidationContext validationContext)
 		{
-			var dto = value as SignInRequestDto;
-			var context = (ApplicationDbContext)validationContext.GetService(typeof(ApplicationDbContext));
+			var dto = value as SignInRequestDto ?? throw new InvalidCastException($"Object must be of type {nameof(SignInRequestDto)}");
+			var context = validationContext.GetService<ApplicationDbContext>();
 			var statusType = context.Mediators
 				.Where(m => m.PhoneNumber == dto.PhoneNumber)
 				.Select(m => m.StatusId)
