@@ -15,7 +15,6 @@ namespace GraduationProjectAPI.Data
 		public DbSet<Case> Cases { get; set; }
 		public DbSet<Gender> Genders { get; set; }
 		public DbSet<Status> Status { get; set; }
-		public DbSet<Locale> Locales { get; set; }
 		public DbSet<SocialStatus> SocialStatus { get; set; }
 		public DbSet<GeoLocation> GeoLocations { get; set; }
 		public DbSet<Notification> Notifications { get; set; }

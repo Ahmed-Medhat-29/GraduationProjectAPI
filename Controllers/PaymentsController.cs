@@ -31,40 +31,51 @@ namespace GraduationProjectAPI.Controllers
 		[HttpGet("[action]")]
 		public async Task<IActionResult> Wallet()
 		{
-			var receive = await _context.CasePayments
+			var payments = await _context.CasePayments
 				.Where(cp => cp.MediatorId == UserHandler.GetId(User))
-				.Select(cp => new TransactionElement
+				.Select(cp => new
 				{
 					CaseId = cp.CaseId,
 					Name = cp.Case.Name,
 					Amount = cp.Amount,
-					DateTime = cp.DateSubmitted,
+					DateSubmitted = cp.DateSubmitted,
+					DateDelivered = cp.DateDelivered,
 					ImageUrl = cp.Case.Images.Select(i => Paths.CaseImage(i.Id)).FirstOrDefault()
 				}).ToArrayAsync();
 
-			var paid = await _context.CasePayments
-				.Where(cp => cp.MediatorId == UserHandler.GetId(User) && cp.DateDelivered != null)
-				.Select(cp => new TransactionElement
-				{
-					CaseId = cp.CaseId,
-					Name = cp.Case.Name,
-					Amount = cp.Amount * -1,
-					DateTime = (DateTime)cp.DateDelivered,
-					ImageUrl = cp.Case.Images.Select(i => Paths.CaseImage(i.Id)).FirstOrDefault()
-				}).ToArrayAsync();
-
-			var transactions = receive.Union(paid).OrderByDescending(t => t.DateTime);
-			var wallet = await _context.Mediators
+			var walletTask = _context.Mediators
 				.Where(m => m.Id == UserHandler.GetId(User))
 				.Select(m => new WalletDto
 				{
 					Name = m.Name,
 					Balance = m.Balance,
-					ImageUrl = Paths.ProfilePicture(m.Id),
-					Transactions = new List<TransactionElement>(transactions)
+					ImageUrl = Paths.ProfilePicture(m.Id)
 				})
 				.FirstAsync();
 
+			var transactions = payments
+				.Select(p => new TransactionElement
+				{
+					CaseId = p.CaseId,
+					Name = p.Name,
+					Amount = p.Amount,
+					DateTime = p.DateSubmitted,
+					ImageUrl = p.ImageUrl
+				})
+				.Union(payments.Where(p => p.DateDelivered != null)
+					.Select(p => new TransactionElement
+					{
+						CaseId = p.CaseId,
+						Name = p.Name,
+						Amount = p.Amount * -1,
+						DateTime = (DateTime)p.DateDelivered,
+						ImageUrl = p.ImageUrl
+					})
+				)
+				.OrderByDescending(t => t.DateTime).ToArray();
+
+			var wallet = await walletTask;
+			wallet.Transactions = transactions;
 			return new Success(wallet);
 		}
 
@@ -173,7 +184,6 @@ namespace GraduationProjectAPI.Controllers
 				foreach (var amount in amounts)
 					@case.Paid += amount;
 			}
-
 
 			return new SuccessWithPagination(cases, new Pagination(page, casesCount, cases.Length));
 		}

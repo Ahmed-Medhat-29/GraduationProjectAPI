@@ -40,8 +40,5 @@ namespace GraduationProjectAPI.Models
 
 		public Gender Gender { get; set; }
 		public GenderType GenderId { get; set; }
-
-		public Locale Locale { get; set; }
-		public LocaleType LocaleId { get; set; }
 	}
 }

@@ -1,10 +1,11 @@
-﻿using GraduationProjectAPI.Enums;
+﻿using System;
+using GraduationProjectAPI.Enums;
 
 namespace GraduationProjectAPI.Utilities
 {
 	public static class Extenders
 	{
-		public static string ToEnumString(this PeriodType periodType)
+		public static string ToCustomString(this PeriodType periodType)
 		{
 			if (periodType == PeriodType.OneTime)
 				return "One Time";

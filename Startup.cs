@@ -1,6 +1,10 @@
+using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using GraduationProjectAPI.Data;
+using GraduationProjectAPI.Enums;
+using GraduationProjectAPI.Utilities;
 using GraduationProjectAPI.Utilities.AuthenticationConfigurations;
 using GraduationProjectAPI.Utilities.CustomApiResponses;
 using GraduationProjectAPI.Utilities.StaticStrings;
@@ -9,6 +13,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Localization;
 using Microsoft.IdentityModel.Tokens;
 
 namespace GraduationProjectAPI
@@ -55,10 +60,12 @@ namespace GraduationProjectAPI
 
 			services.AddScoped<IAuthenticationTokenGenerator, JwtGenerator>();
 
+			services.AddLocalization(options => options.ResourcesPath = "Resources");
+
 			services.AddMemoryCache();
 		}
 
-		public void Configure(IApplicationBuilder app)
+		public void Configure(IApplicationBuilder app, IStringLocalizerFactory localizerFactory)
 		{
 			app.UseDeveloperExceptionPage();
 			app.Use(async (context, next) =>
@@ -71,6 +78,19 @@ namespace GraduationProjectAPI
 
 				Paths.InitBaseURL(context.Request);
 				await next.Invoke();
+			});
+
+			var cultures = new CultureInfo[]
+				{
+					new CultureInfo("en"),
+					new CultureInfo("ar")
+				};
+
+			app.UseRequestLocalization(options =>
+			{
+				options.DefaultRequestCulture = new Microsoft.AspNetCore.Localization.RequestCulture("en");
+				options.SupportedCultures = cultures;
+				options.SupportedUICultures = cultures;
 			});
 
 			app.UseRouting();

@@ -23,8 +23,7 @@ namespace GraduationProjectAPI.DTOs.Request.Donators
 			{
 				Name = Name,
 				PhoneNumber = PhoneNumber,
-				FirebaseToken = FirebaseToken,
-				LocaleId = Enums.LocaleType.EN
+				FirebaseToken = FirebaseToken
 			};
 		}
 	}

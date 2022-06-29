@@ -48,8 +48,7 @@ namespace GraduationProjectAPI.Controllers
 					Name = d.Name,
 					PhoneNumber = d.PhoneNumber,
 					JwtToken = tokenGenerator.Generate(d.Id.ToString(), Roles.Donator),
-					FirebaseToken = dto.FirebaseToken,
-					Locale = d.LocaleId.ToString()
+					FirebaseToken = dto.FirebaseToken
 				})
 				.FirstAsync(d => d.PhoneNumber == dto.PhoneNumber);
 

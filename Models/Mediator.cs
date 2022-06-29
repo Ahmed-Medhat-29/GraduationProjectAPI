@@ -66,9 +66,6 @@ namespace GraduationProjectAPI.Models
 		public Status Status { get; set; }
 		public StatusType StatusId { get; set; }
 
-		public Locale Locale { get; set; }
-		public LocaleType LocaleId { get; set; }
-
 		public ICollection<MediatorReview> ReviewsAboutMe;
 		public ICollection<MediatorReview> ReviewsByMe;
 		public ICollection<Notification> Notifications { get; set; }

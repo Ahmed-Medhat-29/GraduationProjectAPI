@@ -52,8 +52,7 @@ namespace GraduationProjectAPI.DTOs.Request.Mediators
 				NationalIdImage = FormFileHandler.ConvertToBytes(NationalIdImage),
 				GenderId = (GenderType)GenderId,
 				SocialStatusId = (SocialStatusType)SocialStatusId,
-				StatusId = StatusType.Pending,
-				LocaleId = LocaleType.EN
+				StatusId = StatusType.Pending
 			};
 		}
 	}

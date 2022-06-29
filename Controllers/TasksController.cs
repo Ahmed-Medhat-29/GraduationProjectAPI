@@ -113,7 +113,7 @@ namespace GraduationProjectAPI.Controllers
 					Title = c.Title,
 					NeededMoneyAmount = c.NeededMoneyAmount,
 					Age = (short)(DateTime.Now - c.DateRequested).Days,
-					Period = c.PeriodId.ToEnumString(),
+					Period = c.PeriodId.ToCustomString(),
 					Details = c.GeoLocation.Details,
 					ImageUrl = c.Images.Select(i => Paths.CaseImage(i.Id)).FirstOrDefault()
 				})
@@ -139,7 +139,7 @@ namespace GraduationProjectAPI.Controllers
 					NeededMoneyAmount = c.NeededMoneyAmount,
 					DateRequested = c.DateRequested,
 					Story = c.Story,
-					Period = c.PeriodId.ToEnumString(),
+					Period = c.PeriodId.ToCustomString(),
 					Mediator = new CaseMediatorDto
 					{
 						Id = c.MediatorId,

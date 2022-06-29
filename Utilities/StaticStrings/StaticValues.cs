@@ -4,6 +4,8 @@ using System.Linq;
 using GraduationProjectAPI.Enums;
 using GraduationProjectAPI.Models.CaseProperties;
 using GraduationProjectAPI.Models.Shared;
+using Microsoft.AspNetCore.Mvc.Localization;
+using Microsoft.Extensions.Localization;
 
 namespace GraduationProjectAPI.Utilities.StaticStrings
 {
@@ -12,7 +14,7 @@ namespace GraduationProjectAPI.Utilities.StaticStrings
 		public static IEnumerable<Period> Periods()
 		{
 			return Enum.GetValues<PeriodType>()
-				.Select(e => new Period { Id = e, Name = e.ToEnumString() });
+				.Select(e => new Period { Id = e, Name = e.ToCustomString() });
 		}
 
 		public static IEnumerable<Models.NotificationType> NotificationTypes()
@@ -31,12 +33,6 @@ namespace GraduationProjectAPI.Utilities.StaticStrings
 		{
 			return Enum.GetValues<GenderType>()
 				.Select(e => new Gender { Id = e, Name = e.ToString() });
-		}
-
-		public static IEnumerable<Locale> Locales()
-		{
-			return Enum.GetValues<LocaleType>()
-				.Select(e => new Locale { Id = e, Name = e.ToString() });
 		}
 
 		public static IEnumerable<Priority> Priorities()

@@ -66,7 +66,6 @@ namespace GraduationProjectAPI.Controllers
 					Gender = m.GenderId.ToString(),
 					Region = m.Region.Name,
 					SocialStatus = m.SocialStatusId.ToString(),
-					Locale = m.LocaleId.ToString(),
 					Status = m.StatusId.ToString(),
 					ProfileImageUrl = Paths.ProfilePicture(m.Id),
 					NationalIdImageUrl = Paths.NationalIdImage(m.Id),

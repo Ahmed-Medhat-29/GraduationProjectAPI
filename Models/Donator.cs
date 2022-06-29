@@ -23,9 +23,6 @@ namespace GraduationProjectAPI.Models
 		[Column(TypeName = "datetime2(0)")]
 		public DateTime DateRegistered { get; private set; } = DateTime.Now;
 
-		public Locale Locale { get; set; }
-		public LocaleType LocaleId { get; set; }
-
 		public Donator()
 		{
 

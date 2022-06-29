@@ -51,7 +51,6 @@ namespace GraduationProjectAPI.Controllers
 					Region = m.Region.Name,
 					RegionId = m.RegionId,
 					SocialStatus = m.SocialStatusId.ToString(),
-					Locale = m.LocaleId.ToString(),
 					Status = m.StatusId.ToString(),
 					ProfileImageUrl = Paths.ProfilePicture(m.Id),
 					NationalIdImageUrl = Paths.NationalIdImage(m.Id),
@@ -115,9 +114,11 @@ namespace GraduationProjectAPI.Controllers
 		[HttpGet("[action]")]
 		public async Task<IActionResult> FAQ()
 		{
-			return new Success(await _context.FAQs
+			var faq = await _context.FAQs
 				.Select(f => new { f.Title, f.Description })
-				.ToArrayAsync());
+				.ToArrayAsync();
+
+			return new Success(faq);
 		}
 	}
 }

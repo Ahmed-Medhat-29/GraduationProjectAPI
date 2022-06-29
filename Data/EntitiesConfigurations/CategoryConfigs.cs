@@ -8,13 +8,8 @@ namespace GraduationProjectAPI.Data.EntitiesConfigurations
 	{
 		public void Configure(EntityTypeBuilder<Category> builder)
 		{
-			var data = new[]
-			{
-				new Category { Id = 1, Name = "Medical"},
-				new Category { Id = 2, Name = "Poverty"}
-			};
-
-			builder.HasData(data);
+			builder.HasIndex(g => g.Name).IsUnique();
+			builder.HasIndex(g => g.Name_AR).IsUnique();
 		}
 	}
 }
