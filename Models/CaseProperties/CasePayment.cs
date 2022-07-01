@@ -23,6 +23,8 @@ namespace GraduationProjectAPI.Models.CaseProperties
 
 		public int? RoundNnumber { get; set; }
 
+		public byte[] TransactionImage { get; set; }
+
 		[Column(TypeName = "datetime2(0)")]
 		public DateTime DateSubmitted { get; set; }
 

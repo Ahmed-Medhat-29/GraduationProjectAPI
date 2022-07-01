@@ -9,6 +9,8 @@ namespace GraduationProjectAPI.Utilities.StaticStrings
 		private const string _profilePicture = "/api/mediators/profile-image/";
 		private const string _nationalIdImage = "/api/mediators/nationalid-image/";
 		private const string _caseImage = "/api/cases/images/";
+		private const string _categoryImage = "/api/category-image/";
+		private const string _governorateImage = "/api/governorate-image/";
 
 		public static void InitBaseURL(HttpRequest Request)
 		{
@@ -28,6 +30,16 @@ namespace GraduationProjectAPI.Utilities.StaticStrings
 		public static string CaseImage(int id)
 		{
 			return new StringBuilder(_baseURL).Append(_caseImage).Append(id).ToString();
+		}
+
+		public static string CategoryImage(int id)
+		{
+			return new StringBuilder(_baseURL).Append(_categoryImage).Append(id).ToString();
+		}
+
+		public static string GovernorateImage(int id)
+		{
+			return new StringBuilder(_baseURL).Append(_governorateImage).Append(id).ToString();
 		}
 	}
 }

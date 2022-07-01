@@ -14,6 +14,8 @@ namespace GraduationProjectAPI.Models.Location
 		[Required, MaxLength(250)]
 		public string Name_AR { get; set; }
 
+		public byte[] Image { get; set; }
+
 		public ICollection<City> Cities { get; set; }
 	}
 }

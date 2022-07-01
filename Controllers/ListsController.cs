@@ -121,6 +121,28 @@ namespace GraduationProjectAPI.Controllers
 			return new Success(properties);
 		}
 
+		[HttpGet("category-image/{id:min(1)}")]
+		public async Task<IActionResult> CategoryImage(int id)
+		{
+			var image = await _context.Categories
+				.Where(c => c.Id == id)
+				.Select(c => c.Image)
+				.FirstOrDefaultAsync();
+
+			return image == null ? NotFound(null) : File(image, "image/jpeg");
+		}
+
+		[HttpGet("governorate-image/{id:min(1)}")]
+		public async Task<IActionResult> GovernorateImage(int id)
+		{
+			var image = await _context.Governorates
+				.Where(c => c.Id == id)
+				.Select(c => c.Image)
+				.FirstOrDefaultAsync();
+
+			return image == null ? NotFound(null) : File(image, "image/jpeg");
+		}
+
 		private IEnumerable<Gender> GetGenders()
 		{
 			IEnumerable<Gender> genders;

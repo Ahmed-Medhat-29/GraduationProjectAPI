@@ -1,13 +1,18 @@
 ﻿using System;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Threading;
 using System.Threading.Tasks;
 using GraduationProjectAPI.Data;
+using GraduationProjectAPI.DTOs;
 using GraduationProjectAPI.DTOs.Common;
+using GraduationProjectAPI.DTOs.Response;
 using GraduationProjectAPI.DTOs.Response.Cases;
 using GraduationProjectAPI.DTOs.Response.Mediators;
 using GraduationProjectAPI.Enums;
 using GraduationProjectAPI.Models;
+using GraduationProjectAPI.Models.CaseProperties;
+using GraduationProjectAPI.Models.Location;
 using GraduationProjectAPI.Utilities.CustomApiResponses;
 using GraduationProjectAPI.Utilities.General;
 using GraduationProjectAPI.Utilities.StaticStrings;
@@ -23,10 +28,12 @@ namespace GraduationProjectAPI.Controllers
 	public class HomeController : ControllerBase
 	{
 		private readonly ApplicationDbContext _context;
+		private readonly string _culture;
 
 		public HomeController(ApplicationDbContext context)
 		{
 			_context = context;
+			_culture = Thread.CurrentThread.CurrentCulture.Name;
 		}
 
 		[Authorize(Roles = Roles.Mediator)]
@@ -108,7 +115,40 @@ namespace GraduationProjectAPI.Controllers
 		[HttpGet("[action]/[controller]")]
 		public IActionResult Donators()
 		{
-			return new Success("Hi, I am donator");
+			var categories = _context.Categories
+				.Select(c => new CategoryDto
+				{
+					Id = c.Id,
+					Name = _culture == "ar" ? c.Name_AR : c.Name,
+					ImageUrl = Paths.CategoryImage(c.Id)
+				});
+
+			var governorates = _context.Governorates
+				.Select(g => new GovernorateDto
+				{
+					Id = g.Id,
+					Name = _culture == "ar" ? g.Name_AR : g.Name,
+					ImageUrl = Paths.GovernorateImage(g.Id)
+				});
+
+			var cases = _context.Cases
+				.Take(25)
+				.Where(c => c.StatusId == StatusType.Accepted ||
+					   c.PaymentDate > DateTime.Now)
+				.Select(c => new CaseElementDto
+				{
+					Id = c.Id,
+					Name = c.Name,
+					Title = c.Title,
+					Priority = c.Priority.Name,
+					Age = (short)(c.PaymentDate - DateTime.Now).TotalDays,
+					FundRaised = c.CasePayments.Where(cp => cp.RoundNnumber == c.CurrentRound && cp.DateDelivered != null).Sum(cp => cp.Amount),
+					TotalNeeded = c.NeededMoneyAmount,
+					NumberOfContributer = c.CasePayments.Where(cp => cp.DateDelivered != null).Count(),
+					ImageUrl = c.Images.Select(i => Paths.CaseImage(i.Id)).FirstOrDefault()
+				});
+
+			return new Success(new { categories, governorates, cases });
 		}
 
 		[HttpGet("[action]")]
